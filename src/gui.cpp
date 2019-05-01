@@ -5,13 +5,22 @@
 #include "gui.hpp"
 #include "handler.hpp"
 
+enum
+  {
+    MENU_Exit = wxID_HIGHEST,
+    MENU_Open,
+    MENU_Remove,
+    MENU_SaveAs,
+    MENU_Clear
+  };
+
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
- EVT_BUTTON(BUTTON_Clear, MainFrame::OnClear)
- EVT_BUTTON(MENU_Open,    MainFrame::OnImageOpen)
- EVT_BUTTON(MENU_Remove,  MainFrame::OnImageRemove)
- EVT_BUTTON(MENU_SaveAs,  MainFrame::OnImageSaveAs)
- EVT_BUTTON(MENU_Exit,    MainFrame::OnExit)
+ EVT_MENU(MENU_Open,    MainFrame::OnImageOpen)
+ EVT_MENU(MENU_Remove,  MainFrame::OnImageRemove)
+ EVT_MENU(MENU_SaveAs,  MainFrame::OnImageSaveAs)
+ EVT_MENU(MENU_Exit,    MainFrame::OnExit)
+ EVT_MENU(MENU_Clear,   MainFrame::OnClear)
 END_EVENT_TABLE()
 
   
@@ -28,6 +37,7 @@ MainFrame::MainFrame(wxWindow *parent, const wxString &title, wxWindowID id, con
 
 
   CreateGUIControls(mf_size);
+  
   Center();
   //Fit();
 }
@@ -40,73 +50,38 @@ MainFrame::~MainFrame()
 
 void MainFrame::CreateGUIControls(const wxSize& mf_size)
 {
-    // create a menu bar
-    menuBar = new wxMenuBar();
-
-    imageMenu = new wxMenu();
-    imageMenu->Append(MENU_Open, _("Load Bands..."), wxT("Load Band images"));
-    imageMenu->AppendSeparator();
-    imageMenu->Append(MENU_SaveAs, _T("&Save"));
-
-    exitMenu = new wxMenu();
-    exitMenu->Append(MENU_Exit, _("E&xit\tAlt-X"), wxT("Quit this program"));
-    
-    menuBar->Append(imageMenu, _("&Images"));
-    //menuBar->Append(aboutMenu, _("&Help"));
-    menuBar->Append(exitMenu, _("&Exit"));
-
-    SetMenuBar(menuBar);
-
-
-
     std::cout<<mf_size.GetWidth()<<"  -- "<<mf_size.GetHeight()<<std::endl;
+  
+    menubar = new wxToolBar(this, wxID_ANY);    
+    menubar->AddTool(MENU_Exit, wxT("Exit application"), wxBitmap(wxT("resources/icons/exit.png"), wxBITMAP_TYPE_PNG));
+    menubar->AddTool(MENU_SaveAs, wxT("Save"), wxBitmap(wxT("resources/icons/save.png"), wxBITMAP_TYPE_PNG));
+    menubar-> AddSeparator();
+    menubar->AddTool(MENU_Clear, wxT("Clear"), wxBitmap(wxT("resources/icons/clear.png"), wxBITMAP_TYPE_PNG));
+    
+    menubar->Realize();
 
-
-
-    wxPanel* controlpanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0));
-
-
-    wxStaticText* loadString   = new wxStaticText( controlpanel , wxID_ANY , "Test 1" ) ;
-
+    
     wxPanel* displaypanel = new wxPanel(this, wxID_ANY);
-
-    wxStaticText* infoString = new wxStaticText( displaypanel , wxID_ANY , "Display Image..." );
-    
-    
-    wxButton* clearButton = new wxButton(displaypanel , BUTTON_Clear , "CLEAR");
-    
-    
-    
     ic = new ImageContainer(displaypanel, wxID_ANY);
     ic->SetImage(wxImage("resources/image.tif"));
-    //layout management with sizers
-    wxBoxSizer* controlsizer = new wxBoxSizer(wxHORIZONTAL);
-    controlsizer->Add(loadString, 1, wxALL | wxEXPAND | wxALIGN_CENTER, 5);
-
-
-
+    
     wxBoxSizer* displaysizer = new wxBoxSizer(wxVERTICAL);
-    displaysizer->Add(infoString, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 5);
     displaysizer->Add(ic, 1, wxEXPAND);
-
-
-
-    wxBoxSizer* mainsizer = new wxBoxSizer(wxVERTICAL);
-
-    mainsizer->Add(controlpanel, 0, wxALIGN_CENTER, 10);
-    mainsizer->Add(displaypanel, 1, wxEXPAND | wxALL, 10);
-    //mainsizer->Add(ic, 1, wxEXPAND | wxALIGN_CENTER_HORIZONTAL, 10);
-
-
-
-    controlpanel->SetSizerAndFit(controlsizer);
     displaypanel->SetSizerAndFit(displaysizer);
 
-    this->SetSizerAndFit(mainsizer);
+    wxBoxSizer *mainsizer = new wxBoxSizer(wxVERTICAL);
+    mainsizer->Add(menubar, 0, wxEXPAND);
+    mainsizer->Add(displaypanel, 1, wxEXPAND | wxALL, 10);
+    
+    SetSizer(mainsizer);
+
+    
 }
 void MainFrame::OnClear( wxCommandEvent& event )
 {
-
+   std::cout<<"Clear Image..."<<std::endl;
+   ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
+    
 }
 		
 void MainFrame::OnImageOpen(wxCommandEvent& event)
