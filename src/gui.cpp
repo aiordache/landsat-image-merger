@@ -4,7 +4,6 @@
 
 #include "gui.hpp"
 #include "handler.hpp"
-#include "image_container.hpp"
 
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
@@ -110,16 +109,16 @@ void MainFrame::OnClear( wxCommandEvent& event )
 
 }
 		
-void MainFrame::OpenImage(wxCommandEvent& event)
+void MainFrame::OnImageOpen(wxCommandEvent& event)
 {
    std::cout<<"Opening Image..."<<std::endl;
 }
-void MainFrame::SaveImage(wxCommandEvent& event)
+void MainFrame::OnImageSaveAs(wxCommandEvent& event)
 {
 
    std::cout<<"Save Image..."<<std::endl;
 }
-void MainFrame::RemoveImage(wxCommandEvent& event)
+void MainFrame::OnImageRemove(wxCommandEvent& event)
 {
   
    std::cout<<"Remove Image..."<<std::endl;

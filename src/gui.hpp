@@ -8,13 +8,12 @@
 #endif
 
 #include <wx/filedlg.h>
-#include <wx/statline.h>
-#include <wx/statbox.h>
-#include <wx/radiobox.h>
-#include <wx/stattext.h>
 #include <wx/textctrl.h>
 #include <wx/button.h>
 #include <wx/panel.h>
+
+
+#include "image_container.hpp"
 
 static const char *icon_xpm_data[] = {
 /* columns rows colors chars-per-pixel */
@@ -82,9 +81,9 @@ class MainFrame : public wxFrame
 		
 		ImageContainer* ic;
 		
-		void OpenImage(wxCommandEvent& event);
-    void SaveImage(wxCommandEvent& event);
-    void RemoveImage(wxCommandEvent& event);
+		void OnImageOpen(wxCommandEvent& event);
+    void OnImageSaveAs(wxCommandEvent& event);
+    void OnImageRemove(wxCommandEvent& event);
     void OnExit( wxCommandEvent& event );
     void OnClear( wxCommandEvent& event );
 		
