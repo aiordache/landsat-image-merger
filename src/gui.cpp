@@ -7,21 +7,30 @@
 #include "image_container.hpp"
 
 
+BEGIN_EVENT_TABLE(MainFrame, wxFrame)
+ EVT_BUTTON(BUTTON_Clear, MainFrame::OnClear)
+ EVT_BUTTON(MENU_Open,    MainFrame::OnImageOpen)
+ EVT_BUTTON(MENU_Remove,  MainFrame::OnImageRemove)
+ EVT_BUTTON(MENU_SaveAs,  MainFrame::OnImageSaveAs)
+ EVT_BUTTON(MENU_Exit,    MainFrame::OnExit)
+END_EVENT_TABLE()
+
+  
 MainFrame::MainFrame(wxWindow *parent, const wxString &title, wxWindowID id, const wxPoint &position, const wxSize& mf_size, long style)
 : wxFrame(parent, id, title, position, mf_size, style)
 {
-    SetTitle(title);
-	SetSize(mf_size);
+  SetTitle(title);
+  SetSize(mf_size);
 
-    // set the frame icon
-    SetIcon(icon_xpm_data);
+  // set the frame icon
+  SetIcon(icon_xpm_data);
 
-    wxInitAllImageHandlers(); 
+  wxInitAllImageHandlers(); 
 
 
-	CreateGUIControls(mf_size);
-	Center();
-    //Fit();
+  CreateGUIControls(mf_size);
+  Center();
+  //Fit();
 }
 
 MainFrame::~MainFrame()
@@ -33,25 +42,21 @@ MainFrame::~MainFrame()
 void MainFrame::CreateGUIControls(const wxSize& mf_size)
 {
     // create a menu bar
-    /*menuBar = new wxMenuBar();
+    menuBar = new wxMenuBar();
 
     imageMenu = new wxMenu();
-    //imageMenu->Append(wxID_LOAD, _("Load Bands..."), wxT("Load Band images"));
+    imageMenu->Append(MENU_Open, _("Load Bands..."), wxT("Load Band images"));
     imageMenu->AppendSeparator();
-    //imageMenu->Append(wxID_SAVE, _T("&Save"));
-    //imageFile->Append(wxID_EXIT, _("E&xit\tAlt-X"), wxT("Quit this program"));
-
-    aboutMenu = new wxMenu();
-    aboutMenu->Append(wxID_ABOUT, _("&About...\tF1"), wxT("Show about dialog"));
+    imageMenu->Append(MENU_SaveAs, _T("&Save"));
 
     exitMenu = new wxMenu();
-
+    exitMenu->Append(MENU_Exit, _("E&xit\tAlt-X"), wxT("Quit this program"));
+    
     menuBar->Append(imageMenu, _("&Images"));
-    menuBar->Append(aboutMenu, _("&Help"));
+    //menuBar->Append(aboutMenu, _("&Help"));
     menuBar->Append(exitMenu, _("&Exit"));
 
     SetMenuBar(menuBar);
-*/
 
 
 
@@ -62,23 +67,22 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     wxPanel* controlpanel = new wxPanel(this, wxID_ANY, wxPoint(0, 0));
 
 
-    wxStaticText* m_helloString   = new wxStaticText( controlpanel , wxID_ANY , "Test 1" ) ;
-    wxStaticText* m_todayString   = new wxStaticText( controlpanel , wxID_ANY , "Test 2"  ) ;
-    wxStaticText* m_thousandString = new wxStaticText( controlpanel , wxID_ANY , "Test 3" );
+    wxStaticText* loadString   = new wxStaticText( controlpanel , wxID_ANY , "Test 1" ) ;
 
     wxPanel* displaypanel = new wxPanel(this, wxID_ANY);
 
     wxStaticText* infoString = new wxStaticText( displaypanel , wxID_ANY , "Display Image..." );
-    ImageContainer* ic = new ImageContainer(displaypanel, wxID_ANY);//, wxBitmap(this->GetIcon()));
-    //, wxSize(mf_size.GetWidth(), mf_size.GetHeight() * 0.5));//"resources/landsat_ro/LC08_L1TP_182029_20181030_20181030_01_RT_B11.TIF");
-
-    //ic->SetImage(wxImage(icon_xpm_data));
+    
+    
+    wxButton* clearButton = new wxButton(displaypanel , BUTTON_Clear , "CLEAR");
+    
+    
+    
+    ic = new ImageContainer(displaypanel, wxID_ANY);
     ic->SetImage(wxImage("resources/image.tif"));
     //layout management with sizers
     wxBoxSizer* controlsizer = new wxBoxSizer(wxHORIZONTAL);
-    controlsizer->Add(m_helloString, 1, wxALL | wxEXPAND | wxALIGN_CENTER, 5);
-    controlsizer->Add(m_todayString, 1, wxALL | wxEXPAND | wxALIGN_CENTER, 5);
-    controlsizer->Add(m_thousandString, 1, wxALL | wxEXPAND | wxALIGN_CENTER, 5);
+    controlsizer->Add(loadString, 1, wxALL | wxEXPAND | wxALIGN_CENTER, 5);
 
 
 
@@ -100,15 +104,33 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     displaypanel->SetSizerAndFit(displaysizer);
 
     this->SetSizerAndFit(mainsizer);
+}
+void MainFrame::OnClear( wxCommandEvent& event )
+{
 
+}
+		
+void MainFrame::OpenImage(wxCommandEvent& event)
+{
+   std::cout<<"Opening Image..."<<std::endl;
+}
+void MainFrame::SaveImage(wxCommandEvent& event)
+{
 
-
+   std::cout<<"Save Image..."<<std::endl;
+}
+void MainFrame::RemoveImage(wxCommandEvent& event)
+{
+  
+   std::cout<<"Remove Image..."<<std::endl;
 }
 
 
-void MainFrame::OnClose(wxCloseEvent& event)
+void MainFrame::OnExit( wxCommandEvent& event )
 {
-	Destroy();
+  std::cout<<"Exiting..."<<std::endl;
+  Close(TRUE);
+  
 }
 
 wxString MainFrame::toPostfix(wxString str)
