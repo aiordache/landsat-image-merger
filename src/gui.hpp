@@ -15,50 +15,6 @@
 
 #include "image_container.hpp"
 
-static const char *icon_xpm_data[] = {
-/* columns rows colors chars-per-pixel */
-"32 32 6 1",
-"  c black",
-". c navy",
-"X c red",
-"o c yellow",
-"O c gray100",
-"+ c None",
-/* pixels */
-"++++++++++++++++++++++++++++++++",
-"++++++++++++++++++++++++++++++++",
-"++++++++++++++++++++++++++++++++",
-"++++++++++++++++++++++++++++++++",
-"++++++++++++++++++++++++++++++++",
-"++++++++              ++++++++++",
-"++++++++ ............ ++++++++++",
-"++++++++ ............ ++++++++++",
-"++++++++ .OO......... ++++++++++",
-"++++++++ .OO......... ++++++++++",
-"++++++++ .OO......... ++++++++++",
-"++++++++ .OO......              ",
-"++++++++ .OO...... oooooooooooo ",
-"         .OO...... oooooooooooo ",
-" XXXXXXX .OO...... oOOooooooooo ",
-" XXXXXXX .OO...... oOOooooooooo ",
-" XOOXXXX ......... oOOooooooooo ",
-" XOOXXXX ......... oOOooooooooo ",
-" XOOXXXX           oOOooooooooo ",
-" XOOXXXXXXXXX ++++ oOOooooooooo ",
-" XOOXXXXXXXXX ++++ oOOooooooooo ",
-" XOOXXXXXXXXX ++++ oOOooooooooo ",
-" XOOXXXXXXXXX ++++ oooooooooooo ",
-" XOOXXXXXXXXX ++++ oooooooooooo ",
-" XXXXXXXXXXXX ++++              ",
-" XXXXXXXXXXXX ++++++++++++++++++",
-"              ++++++++++++++++++",
-"++++++++++++++++++++++++++++++++",
-"++++++++++++++++++++++++++++++++",
-"++++++++++++++++++++++++++++++++",
-"++++++++++++++++++++++++++++++++",
-"++++++++++++++++++++++++++++++++"
-};
-
 
  
 class MainFrame : public wxFrame
@@ -66,12 +22,17 @@ class MainFrame : public wxFrame
 	private:
         wxToolBar       *menubar;
         ImageContainer  *ic;
-
-        void OnImageOpen(wxCommandEvent& event);
+        //Landsat Bands
+        wxImage*         BANDS[7];
+        
+        
+        void OnLoadFromDir(wxCommandEvent& event);
+        void OnLoadImage(wxCommandEvent& event);
+        
         void OnImageSaveAs(wxCommandEvent& event);
         void OnImageRemove(wxCommandEvent& event);
         void OnExit( wxCommandEvent& event );
-        void OnClear( wxCommandEvent& event );
+        void OnDiscardAllImages( wxCommandEvent& event );
 
         void CreateGUIControls(const wxSize& mf_size);
 
@@ -79,7 +40,7 @@ class MainFrame : public wxFrame
         DECLARE_EVENT_TABLE();
 
 	public:
-		MainFrame(wxWindow *parent, const wxString &title = wxT("Satellite Image Processing Project"), wxWindowID id = 1, const wxPoint& pos = wxDefaultPosition, const wxSize& mf_size = wxSize(800, 600), const long style = wxDEFAULT_FRAME_STYLE);
+		MainFrame(wxWindow *parent, const wxString &title = wxT("Satellite Image Processing Project"), wxWindowID id = 1, const wxPoint& pos = wxDefaultPosition, const wxSize& mf_size = wxSize(1200, 800), const long style = wxDEFAULT_FRAME_STYLE);
 
     
   
@@ -88,3 +49,7 @@ class MainFrame : public wxFrame
 		~MainFrame();
 
 };
+
+
+
+
