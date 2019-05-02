@@ -75,27 +75,60 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
     //menubar->AddTool(MENU_Open, wxT("Band 1"), wxBitmap(folder_icon));
     menubar->AddSeparator();
-    // here add the landsat bands load buttons
-    menubar->AddTool(B1, wxT("Band 1"), wxBitmap(add_image_icon));
-    menubar->AddTool(B2, wxT("Band 2"), wxBitmap(add_image_icon));
-    menubar->AddTool(B3, wxT("Band 3"), wxBitmap(add_image_icon));
-    menubar->AddTool(B4, wxT("Band 4"), wxBitmap(add_image_icon));
-    menubar->AddTool(B5, wxT("Band 5"), wxBitmap(add_image_icon));
-    menubar->AddTool(B6, wxT("Band 6"), wxBitmap(add_image_icon));
-    menubar->AddTool(B7, wxT("Band 7"), wxBitmap(add_image_icon));
-    menubar->AddTool(B8, wxT("Band 8"), wxBitmap(add_image_icon));
     
     
+    // here add the landsat bands text and load buttons
     
-    menubar->AddSeparator();
+    wxFont font = wxFont(8, wxDECORATIVE, wxITALIC, wxNORMAL); 
+    wxSize textsize = wxSize(18, -1);
+    wxStaticText* st = new wxStaticText(menubar, wxID_ANY, _("Blue"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B1, wxT("Visible Blue"), wxBitmap(add_image_icon));
+    
+    st = new wxStaticText(menubar, wxID_ANY, _("Green"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B2, wxT("Visible Green"), wxBitmap(add_image_icon));
+    
+    
+    st = new wxStaticText(menubar, wxID_ANY, _("Red"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B3, wxT("Visible Red"), wxBitmap(add_image_icon));
+    
+    st = new wxStaticText(menubar, wxID_ANY, _("Near\n Infr."), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B4, wxT("Near Infrared"), wxBitmap(add_image_icon));
+    
+    st = new wxStaticText(menubar, wxID_ANY, _("Mid\nInfr:"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B5, wxT("Middle Infrared"), wxBitmap(add_image_icon));
+    
+    st = new wxStaticText(menubar, wxID_ANY, _("Therm\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B6, wxT("Thermal Infrared"), wxBitmap(add_image_icon));
+    
+    st = new wxStaticText(menubar, wxID_ANY, _("Mid\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B7, wxT("Middle Infrared"), wxBitmap(add_image_icon));
+    
+    st = new wxStaticText(menubar, wxID_ANY, _("Panch-\nromatic"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B8, wxT("Panchromatic"), wxBitmap(add_image_icon));
+    
     
     menubar->AddStretchableSpace();
     menubar->AddSeparator();
-    menubar->AddSeparator();
     menubar->AddTool(MENU_Clear, wxT("Clear"), wxBitmap(bin_icon));
  
-    
-    
+    menubar->SetToolShortHelp(B1,"Test");
+    std::cout<<B1<<"   "<<menubar->GetToolsCount()<<"  \n";
     
     
     //ImageLoader* il = new ImageLoader(this, BANDS, 7);

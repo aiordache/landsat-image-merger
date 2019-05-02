@@ -11,10 +11,7 @@
 #include <wx/textctrl.h>
 #include <wx/button.h>
 #include <wx/panel.h>
-
-
 #include "image_container.hpp"
-
 
  
 class MainFrame : public wxFrame
