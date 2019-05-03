@@ -14,13 +14,19 @@
 #include "image_container.hpp"
 
  
+//number of Landsat bands to work with
+#define N 8
+
+
+ 
+ 
 class MainFrame : public wxFrame
 {
 	private:
         wxToolBar       *menubar;
         ImageContainer  *ic;
         //Landsat Bands
-        wxImage*         BANDS[7];
+        wxImage*         BANDS[N] = {NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL};
         
         
         void OnLoadFromDir(wxCommandEvent& event);

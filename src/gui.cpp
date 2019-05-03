@@ -78,7 +78,10 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
     
     // here add the landsat bands text and load buttons
-    
+    //family can be: wx.DECORATIVE, wx.DEFAULT,wx.MODERN, wx.ROMAN, wx.SCRIPT or wx.SWISS.
+    //style can be: wx.NORMAL, wx.SLANT or wx.ITALIC.
+    //weight can be: wx.NORMAL, wx.LIGHT, or wx.BOLD
+
     wxFont font = wxFont(8, wxDECORATIVE, wxITALIC, wxNORMAL); 
     wxSize textsize = wxSize(18, -1);
     wxStaticText* st = new wxStaticText(menubar, wxID_ANY, _("Blue"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
@@ -97,12 +100,12 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     menubar->AddControl(st);
     menubar->AddTool(B3, wxT("Visible Red"), wxBitmap(add_image_icon));
     
-    st = new wxStaticText(menubar, wxID_ANY, _("Near\n Infr."), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("Near\n Infr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B4, wxT("Near Infrared"), wxBitmap(add_image_icon));
     
-    st = new wxStaticText(menubar, wxID_ANY, _("Mid\nInfr:"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("Mid\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B5, wxT("Middle Infrared"), wxBitmap(add_image_icon));
@@ -129,11 +132,6 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
  
     menubar->SetToolShortHelp(B1,"Test");
     std::cout<<B1<<"   "<<menubar->GetToolsCount()<<"  \n";
-    
-    
-    //ImageLoader* il = new ImageLoader(this, BANDS, 7);
-    
-    //menubar->AddTool(li);
     
     menubar->Realize();
 
@@ -174,7 +172,16 @@ void MainFrame::OnLoadImage( wxCommandEvent& event )
 void MainFrame::OnDiscardAllImages( wxCommandEvent& event )
 {
    std::cout<<"Discard All Image..."<<std::endl;
-   ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
+   //ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
+   for(int i =0; i < N; i++)
+        if (BANDS[i] != NULL) 
+        {
+            free(BANDS[i]);
+            BANDS[i] = NULL;
+        }
+    
+    //reset toolbar
+     
     
 }
 
