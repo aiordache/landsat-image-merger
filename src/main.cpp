@@ -1,8 +1,6 @@
 
 #include "gui.hpp"
 
-
-
 class Application : public wxApp
 {
   private:

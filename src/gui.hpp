@@ -17,7 +17,15 @@
 //number of Landsat bands to work with
 #define N 8
 
-
+enum
+  {
+    MENU_Exit = wxID_HIGHEST,
+    MENU_Remove,
+    MENU_SaveAs,
+    MENU_Clear,
+    IMAGE_DIR,
+    B1,B2,B3,B4,B5,B6,B7,B8
+  };
  
  
 class MainFrame : public wxFrame
@@ -26,8 +34,9 @@ class MainFrame : public wxFrame
         wxToolBar       *menubar;
         ImageContainer  *ic;
         //Landsat Bands
-        wxImage*         BANDS[N] = {NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL};
+        wxImage*        BANDS[N] = {NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL};
         
+        wxString       IMAGE_PATH[N];
         
         void OnLoadFromDir(wxCommandEvent& event);
         void OnLoadImage(wxCommandEvent& event);

@@ -119,4 +119,7 @@ void ImageContainer::OnMouse(wxMouseEvent &event)
     }
 };
 
-
+void ImageContainer::SaveImage(wxString path)
+{
+    std::cout<<"Saving image to "<<path<<" .... ";
+};

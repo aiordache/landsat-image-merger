@@ -4,18 +4,9 @@
 #include "xpm_icons.hpp"
 #include "gui.hpp"
 #include "handler.hpp"
+#include <dirent.h>
 
-
-enum
-  {
-    MENU_Exit = wxID_HIGHEST,
-    MENU_Remove,
-    MENU_SaveAs,
-    MENU_Clear,
-    IMAGE_DIR,
-    B1,B2,B3,B4,B5,B6,B7,B8
-  };
-
+using namespace std;
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
  EVT_MENU(MENU_Remove,  MainFrame::OnImageRemove)
@@ -64,7 +55,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 {
     std::cout<<mf_size.GetWidth()<<"  -- "<<mf_size.GetHeight()<<std::endl;
   
-    menubar = new wxToolBar(this, wxID_ANY);    
+    menubar = new wxToolBar(this, wxID_ANY);
     menubar->AddTool(MENU_Exit, wxT("Exit application"), wxBitmap(exit_icon));
     menubar->AddTool(MENU_SaveAs, wxT("Save"), wxBitmap(save_icon));
     menubar->AddSeparator();
@@ -76,7 +67,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     //menubar->AddTool(MENU_Open, wxT("Band 1"), wxBitmap(folder_icon));
     menubar->AddSeparator();
     
-    
+
     // here add the landsat bands text and load buttons
     //family can be: wx.DECORATIVE, wx.DEFAULT,wx.MODERN, wx.ROMAN, wx.SCRIPT or wx.SWISS.
     //style can be: wx.NORMAL, wx.SLANT or wx.ITALIC.
@@ -130,9 +121,11 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     menubar->AddSeparator();
     menubar->AddTool(MENU_Clear, wxT("Clear"), wxBitmap(bin_icon));
  
-    menubar->SetToolShortHelp(B1,"Test");
-    std::cout<<B1<<"   "<<menubar->GetToolsCount()<<"  \n";
-    
+    //menubar->SetToolShortHelp(B1,"Test");
+    //std::cout<<B1<<"   "<<menubar->GetToolsCount()<<"  \n";
+
+
+    menubar->SetToolBitmapSize(wxSize(30,30));
     menubar->Realize();
 
     
@@ -157,39 +150,96 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 
 void MainFrame::OnLoadFromDir( wxCommandEvent& event )
 {
-   std::cout<<"Clear Image..."<<std::endl;
-   ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
-    
+    std::cout<<"Clear Image..."<<std::endl;
+    wxDirDialog dlg(NULL, "Choose input directory", "",
+                wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
+
+    vector<string> filenames;
+
+    if ( dlg.ShowModal() == wxID_OK )
+    {
+        wxString path = dlg.GetPath();
+        //list opened directory
+        DIR* dirp = opendir(path.c_str());
+        struct dirent * ent;
+        wxString extension[] = {".jpg", ".tif",".png",".jpeg", ".tiff"};
+        while ((ent = readdir(dirp)) != NULL) {
+            wxString s = ent->d_name;
+            for(int i=0;i<5; i++)
+                if (s.Lower().EndsWith(extension[i]))
+                    filenames.push_back((string)s.c_str());
+        }
+        closedir(dirp);
+        //change icons in menubar
+        for(int id = B1; id <= B8; id++)
+            menubar->SetToolNormalBitmap(id, wxBitmap(color_image_icon));
+    }
+
+    for (int i = 0; i < filenames.size(); ++i)
+    {
+        cout << filenames[i] << '\n';
+    }
+
+    //TODO: check there are 8 image files for each band
+    for(int id = B1; id <= B8; id++)
+    menubar->SetToolNormalBitmap(id, wxBitmap(color_image_icon));
 }
 
 void MainFrame::OnLoadImage( wxCommandEvent& event )
 {
    std::cout<<"Load Images from dir..."<<std::endl;
-   ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
-    
+   //ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
+   int id = event.GetId();
+   //load image file
+   wxFileDialog dlg(
+		this, _("Open Image _?"), wxEmptyString, wxEmptyString,
+		_("Image files|*.tif;*.tiff;*.TIF;*.TIFF;*.png;*.PNG;*.jpeg;*.jpg;*.JPG;*.JPEG|TIF Files (*.tif;*.tiff)|*.tif;*.tiff;*.TIF;*.TIFF|PNG files (*.png)|*.png;*.PNG|JPEG Files (*.jpeg;*.jpg)|*.jpeg;*.jpg;*.JPG;*.JPEG"),
+		wxFD_DEFAULT_STYLE | wxFD_FILE_MUST_EXIST, wxDefaultPosition);
+
+	if (dlg.ShowModal() == wxID_OK) // If the user clicked "OK"
+	{
+		IMAGE_PATH[id - B1] = dlg.GetPath();
+		SetTitle(wxString("Loaded image - ") << dlg.GetFilename());
+	}
+
+   // set button image
+   menubar->SetToolNormalBitmap(id, wxBitmap(color_image_icon));
 }
 
 void MainFrame::OnDiscardAllImages( wxCommandEvent& event )
 {
-   std::cout<<"Discard All Image..."<<std::endl;
-   //ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
-   for(int i =0; i < N; i++)
+    std::cout<<"Discard All Image..."<<std::endl;
+    //ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
+    //change icons in menubar
+    for(int id = B1; id <= B8; id++)
+        menubar->SetToolNormalBitmap(id, wxBitmap(add_image_icon));
+
+    for(int i = 0; i < N; i++)
         if (BANDS[i] != NULL) 
         {
             free(BANDS[i]);
             BANDS[i] = NULL;
+            IMAGE_PATH[i] = "";
         }
-    
-    //reset toolbar
-     
-    
 }
 
 void MainFrame::OnImageSaveAs(wxCommandEvent& event)
 {
 
    std::cout<<"Save Image..."<<std::endl;
+
+   wxFileDialog dlg(
+		this, _("Save File As _?"), wxEmptyString, wxEmptyString,
+		_("Image files|*.tif;*.tiff;*.TIF;*.TIFF;*.png;*.PNG;*.jpeg;*.jpg;*.JPG;*.JPEG|TIF Files (*.tif;*.tiff)|*.tif;*.tiff;*.TIF;*.TIFF|PNG files (*.png)|*.png;*.PNG|JPEG Files (*.jpeg;*.jpg)|*.jpeg;*.jpg;*.JPG;*.JPEG"),
+		wxFD_SAVE | wxFD_OVERWRITE_PROMPT, wxDefaultPosition);
+
+	if (dlg.ShowModal() == wxID_OK)
+	{
+		ic->SaveImage(dlg.GetPath());
+		SetTitle(wxString("Saved image to - ") << dlg.GetFilename());
+	}
 }
+
 void MainFrame::OnImageRemove(wxCommandEvent& event)
 {
   
