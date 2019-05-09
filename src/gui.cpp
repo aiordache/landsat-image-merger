@@ -23,6 +23,11 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
  EVT_MENU(B6,   MainFrame::OnLoadImage)
  EVT_MENU(B7,   MainFrame::OnLoadImage)
  EVT_MENU(B8,   MainFrame::OnLoadImage)
+
+ EVT_BUTTON(GENERATE_BUTTON, MainFrame::OnGenerateImage)
+ EVT_RADIOBUTTON(RADIO_RGB, MainFrame::OnRadioStatusChange)
+ EVT_RADIOBUTTON(RADIO_FORMULA, MainFrame::OnRadioStatusChange)
+
 END_EVENT_TABLE()
 
 
@@ -42,7 +47,7 @@ MainFrame::MainFrame(wxWindow *parent, const wxString &title, wxWindowID id, con
     CreateGUIControls(mf_size);
 
     Center();
-    //Fit();
+    Fit();
 }
 
 MainFrame::~MainFrame()
@@ -53,7 +58,7 @@ MainFrame::~MainFrame()
 
 void MainFrame::CreateGUIControls(const wxSize& mf_size)
 {
-    std::cout<<mf_size.GetWidth()<<"  -- "<<mf_size.GetHeight()<<std::endl;
+    cout<<mf_size.GetWidth()<<"  -- "<<mf_size.GetHeight()<<endl;
   
     menubar = new wxToolBar(this, wxID_ANY);
     menubar->AddTool(MENU_Exit, wxT("Exit application"), wxBitmap(exit_icon));
@@ -75,43 +80,43 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 
     wxFont font = wxFont(8, wxDECORATIVE, wxITALIC, wxNORMAL); 
     wxSize textsize = wxSize(18, -1);
-    wxStaticText* st = new wxStaticText(menubar, wxID_ANY, _("Blue"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    wxStaticText* st = new wxStaticText(menubar, wxID_ANY, _("B1\n\nBlue"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B1, wxT("Visible Blue"), wxBitmap(add_image_icon));
     
-    st = new wxStaticText(menubar, wxID_ANY, _("Green"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B2\n\nGreen"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B2, wxT("Visible Green"), wxBitmap(add_image_icon));
     
     
-    st = new wxStaticText(menubar, wxID_ANY, _("Red"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B3\n\nRed"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B3, wxT("Visible Red"), wxBitmap(add_image_icon));
     
-    st = new wxStaticText(menubar, wxID_ANY, _("Near\n Infr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B4\nNear\n Infr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B4, wxT("Near Infrared"), wxBitmap(add_image_icon));
     
-    st = new wxStaticText(menubar, wxID_ANY, _("Mid\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B5\nMid\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B5, wxT("Middle Infrared"), wxBitmap(add_image_icon));
     
-    st = new wxStaticText(menubar, wxID_ANY, _("Therm\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B6\nTherm\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B6, wxT("Thermal Infrared"), wxBitmap(add_image_icon));
     
-    st = new wxStaticText(menubar, wxID_ANY, _("Mid\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B7\nMid\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B7, wxT("Middle Infrared"), wxBitmap(add_image_icon));
     
-    st = new wxStaticText(menubar, wxID_ANY, _("Panch-\nromatic"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B8\nPanch-\nromatic"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B8, wxT("Panchromatic"), wxBitmap(add_image_icon));
@@ -120,15 +125,32 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     menubar->AddStretchableSpace();
     menubar->AddSeparator();
     menubar->AddTool(MENU_Clear, wxT("Clear"), wxBitmap(bin_icon));
- 
-    //menubar->SetToolShortHelp(B1,"Test");
-    //std::cout<<B1<<"   "<<menubar->GetToolsCount()<<"  \n";
-
 
     menubar->SetToolBitmapSize(wxSize(30,30));
     menubar->Realize();
 
+    // OPERATIONS TOOLBAR
+
+    operationsbar = new wxToolBar(this, wxID_ANY);
+
+    formula = new wxTextCtrl(operationsbar, wxID_ANY,
+        "",wxDefaultPosition, wxSize(200, 30));
+    formula->SetFont(wxFont(14, wxDECORATIVE, wxITALIC, wxNORMAL));
+    formula->Disable();
+
+    operationsbar->AddStretchableSpace();
     
+    operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_RGB, _T("RGB")));
+    operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_FORMULA, _T("Pixel Formula")));
+    
+    operationsbar->AddControl(formula);
+    operationsbar->AddStretchableSpace();
+    
+    operationsbar->AddControl(new wxButton(operationsbar, GENERATE_BUTTON, _T("Generate IMAGE"), wxDefaultPosition, wxDefaultSize, 0));
+    operationsbar->AddStretchableSpace();
+    
+    operationsbar->Realize();
+
     wxPanel* displaypanel = new wxPanel(this, wxID_ANY);
     ic = new ImageContainer(displaypanel, wxID_ANY);
     ic->SetImage(wxImage("resources/image.tif"));
@@ -139,21 +161,19 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 
     wxBoxSizer *mainsizer = new wxBoxSizer(wxVERTICAL);
     mainsizer->Add(menubar, 0, wxEXPAND);
+    mainsizer->Add(operationsbar, 0,  wxEXPAND);
     //mainsizer->Add(il, 0, wxEXPAND);
     
     mainsizer->Add(displaypanel, 1, wxEXPAND | wxALL, 10);
     
     SetSizer(mainsizer);
-
-    
 }
 
 void MainFrame::OnLoadFromDir( wxCommandEvent& event )
 {
-    std::cout<<"Clear Image..."<<std::endl;
+    cout<<"Clear Image..."<<endl;
     wxDirDialog dlg(NULL, "Choose input directory", "",
                 wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
-
 
     if ( dlg.ShowModal() == wxID_OK )
     {
@@ -177,21 +197,18 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
         //sort filenames
         sort(filenames.begin(), filenames.end());
         for (int i = 0; i < filenames.size(); ++i)
-        {
-            cout << filenames[i] << '\n';
             if (i <= B8 - B1)
             {
                 IMAGE_PATH[i] = filenames[i];
                 menubar->SetToolNormalBitmap(B1+i, wxBitmap(color_image_icon));
             }
-        }
     }
 
 }
 
 void MainFrame::OnLoadImage( wxCommandEvent& event )
 {
-   std::cout<<"Load Images from dir..."<<std::endl;
+   cout<<"Load Images from dir..."<<endl;
    //ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
    int id = event.GetId();
    //load image file
@@ -204,16 +221,16 @@ void MainFrame::OnLoadImage( wxCommandEvent& event )
 	{
 		IMAGE_PATH[id - B1] = dlg.GetPath();
 		SetTitle(wxString("Loaded image - ") << dlg.GetFilename());
+		// set button image
+        menubar->SetToolNormalBitmap(id, wxBitmap(color_image_icon));
 	}
 
-   // set button image
-   menubar->SetToolNormalBitmap(id, wxBitmap(color_image_icon));
+   
 }
 
 void MainFrame::OnDiscardAllImages( wxCommandEvent& event )
 {
-    std::cout<<"Discard All Image..."<<std::endl;
-    //ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
+    cout<<"Discard All Image..."<<endl;
     //change icons in menubar
     for(int id = B1; id <= B8; id++)
         menubar->SetToolNormalBitmap(id, wxBitmap(add_image_icon));
@@ -229,9 +246,7 @@ void MainFrame::OnDiscardAllImages( wxCommandEvent& event )
 
 void MainFrame::OnImageSaveAs(wxCommandEvent& event)
 {
-
-   std::cout<<"Save Image..."<<std::endl;
-
+   cout<<"Save Image..."<<endl;
    wxFileDialog dlg(
 		this, _("Save File As _?"), wxEmptyString, wxEmptyString,
 		_("Image files|*.tif;*.tiff;*.TIF;*.TIFF;*.png;*.PNG;*.jpeg;*.jpg;*.JPG;*.JPEG|TIF Files (*.tif;*.tiff)|*.tif;*.tiff;*.TIF;*.TIFF|PNG files (*.png)|*.png;*.PNG|JPEG Files (*.jpeg;*.jpg)|*.jpeg;*.jpg;*.JPG;*.JPEG"),
@@ -247,15 +262,30 @@ void MainFrame::OnImageSaveAs(wxCommandEvent& event)
 void MainFrame::OnImageRemove(wxCommandEvent& event)
 {
   
-   std::cout<<"Remove Image..."<<std::endl;
+   cout<<"Remove Image..."<<endl;
 }
 
 
 void MainFrame::OnExit( wxCommandEvent& event )
 {
-  std::cout<<"Exiting..."<<std::endl;
+  cout<<"Exiting..."<<endl;
   Close(TRUE);
   
+}
+
+void MainFrame::OnGenerateImage(wxCommandEvent& event)
+{
+
+   cout<<"Generate Image..."<<endl;
+}
+
+
+void MainFrame::OnRadioStatusChange(wxCommandEvent& event)
+{
+    if (((wxRadioButton*)operationsbar->FindControl(RADIO_FORMULA))->GetValue())
+        formula->Enable();
+    else
+        formula->Disable();
 }
 
 wxString MainFrame::toPostfix(wxString str)

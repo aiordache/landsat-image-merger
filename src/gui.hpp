@@ -24,7 +24,10 @@ enum
     MENU_SaveAs,
     MENU_Clear,
     IMAGE_DIR,
-    B1,B2,B3,B4,B5,B6,B7,B8
+    B1,B2,B3,B4,B5,B6,B7,B8,
+    GENERATE_BUTTON,
+    RADIO_RGB,
+    RADIO_FORMULA
   };
  
  
@@ -32,6 +35,8 @@ class MainFrame : public wxFrame
 {
 	private:
         wxToolBar       *menubar;
+        wxToolBar       *operationsbar;
+        wxTextCtrl      *formula;
         ImageContainer  *ic;
         //Landsat Bands
         wxImage*        BANDS[N] = {NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL};
@@ -43,9 +48,11 @@ class MainFrame : public wxFrame
         
         void OnImageSaveAs(wxCommandEvent& event);
         void OnImageRemove(wxCommandEvent& event);
-        void OnExit( wxCommandEvent& event );
-        void OnDiscardAllImages( wxCommandEvent& event );
+        void OnExit(wxCommandEvent& event );
+        void OnDiscardAllImages(wxCommandEvent& event );
 
+	    void OnGenerateImage(wxCommandEvent& event);
+        void OnRadioStatusChange(wxCommandEvent& event);
         void CreateGUIControls(const wxSize& mf_size);
 
 
