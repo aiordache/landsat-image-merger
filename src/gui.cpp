@@ -154,7 +154,6 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
     wxDirDialog dlg(NULL, "Choose input directory", "",
                 wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
 
-    vector<string> filenames;
 
     if ( dlg.ShowModal() == wxID_OK )
     {
@@ -163,6 +162,8 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
         DIR* dirp = opendir(path.c_str());
         struct dirent * ent;
         wxString extension[] = {".jpg", ".tif",".png",".jpeg", ".tiff"};
+        vector<string> filenames;
+
         while ((ent = readdir(dirp)) != NULL) {
             wxString s = ent->d_name;
             for(int i=0;i<5; i++)
@@ -170,19 +171,22 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
                     filenames.push_back((string)s.c_str());
         }
         closedir(dirp);
-        //change icons in menubar
-        for(int id = B1; id <= B8; id++)
-            menubar->SetToolNormalBitmap(id, wxBitmap(color_image_icon));
+        //discard previous images if any
+        OnDiscardAllImages(event);
+
+        //sort filenames
+        sort(filenames.begin(), filenames.end());
+        for (int i = 0; i < filenames.size(); ++i)
+        {
+            cout << filenames[i] << '\n';
+            if (i <= B8 - B1)
+            {
+                IMAGE_PATH[i] = filenames[i];
+                menubar->SetToolNormalBitmap(B1+i, wxBitmap(color_image_icon));
+            }
+        }
     }
 
-    for (int i = 0; i < filenames.size(); ++i)
-    {
-        cout << filenames[i] << '\n';
-    }
-
-    //TODO: check there are 8 image files for each band
-    for(int id = B1; id <= B8; id++)
-    menubar->SetToolNormalBitmap(id, wxBitmap(color_image_icon));
 }
 
 void MainFrame::OnLoadImage( wxCommandEvent& event )

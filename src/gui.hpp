@@ -36,7 +36,7 @@ class MainFrame : public wxFrame
         //Landsat Bands
         wxImage*        BANDS[N] = {NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL};
         
-        wxString       IMAGE_PATH[N];
+        std::string       IMAGE_PATH[N];
         
         void OnLoadFromDir(wxCommandEvent& event);
         void OnLoadImage(wxCommandEvent& event);
