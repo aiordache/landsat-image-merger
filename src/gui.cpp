@@ -67,8 +67,8 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     menubar->AddSeparator();
     menubar->AddStretchableSpace();
     
-    menubar->AddTool(IMAGE_DIR, wxT("Band dir"), wxBitmap(empty_folder_icon));
-    
+    menubar->AddTool(IMAGE_DIR, wxT("Band dir"), wxBitmap(folder_icon));
+    menubar->SetToolShortHelp(IMAGE_DIR, "Load images from directory");		
     //menubar->AddTool(MENU_Open, wxT("Band 1"), wxBitmap(folder_icon));
     menubar->AddSeparator();
     
@@ -80,53 +80,61 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 
     wxFont font = wxFont(8, wxDECORATIVE, wxITALIC, wxNORMAL); 
     wxSize textsize = wxSize(18, -1);
-    wxStaticText* st = new wxStaticText(menubar, wxID_ANY, _("B1\n\nBlue"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    wxStaticText* st = new wxStaticText(menubar, wxID_ANY, _("B1"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
-    menubar->AddTool(B1, wxT("Visible Blue"), wxBitmap(add_image_icon));
+    menubar->AddTool(B1, wxT("Band 1 - coastal aerosol"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B1, "Band 1 - coastal aerosol");		
     
-    st = new wxStaticText(menubar, wxID_ANY, _("B2\n\nGreen"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    
+    st = new wxStaticText(menubar, wxID_ANY, _("B2"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
-    menubar->AddTool(B2, wxT("Visible Green"), wxBitmap(add_image_icon));
+    menubar->AddTool(B2, wxT("Band 2 - blue"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B2, "Band 2 - blue");		
     
     
-    st = new wxStaticText(menubar, wxID_ANY, _("B3\n\nRed"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B3"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
-    menubar->AddTool(B3, wxT("Visible Red"), wxBitmap(add_image_icon));
+    menubar->AddTool(B3, wxT("Band 3 - green"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B3, "Band 3 - green");
     
-    st = new wxStaticText(menubar, wxID_ANY, _("B4\nNear\n Infr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B4"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
-    menubar->AddTool(B4, wxT("Near Infrared"), wxBitmap(add_image_icon));
+    menubar->AddTool(B4, wxT("Band 4 - red"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B4, "Band 4 - red");
     
-    st = new wxStaticText(menubar, wxID_ANY, _("B5\nMid\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B5"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
-    menubar->AddTool(B5, wxT("Middle Infrared"), wxBitmap(add_image_icon));
+    menubar->AddTool(B5, wxT("Band 5 - NIR"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B5, "Band 5 - Near Infrared\n(NIR)");
     
-    st = new wxStaticText(menubar, wxID_ANY, _("B6\nTherm\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B6"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
-    menubar->AddTool(B6, wxT("Thermal Infrared"), wxBitmap(add_image_icon));
+    menubar->AddTool(B6, wxT("Band 6 - SWIR 1"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B6, "Band 6 - short-wave\ninfrared (SWIR) 1");
     
-    st = new wxStaticText(menubar, wxID_ANY, _("B7\nMid\nInfr"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B7"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
-    menubar->AddTool(B7, wxT("Middle Infrared"), wxBitmap(add_image_icon));
+    menubar->AddTool(B7, wxT("Band 7 - SWIR 2"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B7, "Band 7 - short-wave\ninfrared (SWIR) 2");
     
-    st = new wxStaticText(menubar, wxID_ANY, _("B8\nPanch-\nromatic"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B8"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
-    menubar->AddTool(B8, wxT("Panchromatic"), wxBitmap(add_image_icon));
+    menubar->AddTool(B8, wxT("Band 8 - Panchromatic"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B8, "Band 8 - panchromatic");
     
     
     menubar->AddStretchableSpace();
     menubar->AddSeparator();
     menubar->AddTool(MENU_Clear, wxT("Clear"), wxBitmap(bin_icon));
 
-    menubar->SetToolBitmapSize(wxSize(30,30));
     menubar->Realize();
 
     // OPERATIONS TOOLBAR
@@ -145,15 +153,14 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
     operationsbar->AddControl(formula);
     operationsbar->AddStretchableSpace();
-    
     operationsbar->AddControl(new wxButton(operationsbar, GENERATE_BUTTON, _T("Generate IMAGE"), wxDefaultPosition, wxDefaultSize, 0));
-    operationsbar->AddStretchableSpace();
-    
+    operationsbar->AddStretchableSpace();    
     operationsbar->Realize();
 
     wxPanel* displaypanel = new wxPanel(this, wxID_ANY);
     ic = new ImageContainer(displaypanel, wxID_ANY);
     ic->SetImage(wxImage("resources/image.tif"));
+    
     
     wxBoxSizer* displaysizer = new wxBoxSizer(wxVERTICAL);
     displaysizer->Add(ic, 1, wxEXPAND);
@@ -162,6 +169,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     wxBoxSizer *mainsizer = new wxBoxSizer(wxVERTICAL);
     mainsizer->Add(menubar, 0, wxEXPAND);
     mainsizer->Add(operationsbar, 0,  wxEXPAND);
+    
     //mainsizer->Add(il, 0, wxEXPAND);
     
     mainsizer->Add(displaypanel, 1, wxEXPAND | wxALL, 10);
