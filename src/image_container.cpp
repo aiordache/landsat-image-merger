@@ -21,6 +21,7 @@ ImageContainer::~ImageContainer()
 
 void ImageContainer::SetImage(wxImage img)
 {
+    
     delete image; image = NULL;
     image = new wxImage(img);
     rect = wxRect(0, 0 , image->GetWidth(), image->GetHeight());
@@ -119,7 +120,3 @@ void ImageContainer::OnMouse(wxMouseEvent &event)
     }
 };
 
-void ImageContainer::SaveImage(wxString path)
-{
-    std::cout<<"Saving image to "<<path<<" .... ";
-};

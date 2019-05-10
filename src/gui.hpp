@@ -7,15 +7,11 @@
 	#include <wx/wxprec.h>
 #endif
 
-#include <wx/filedlg.h>
 #include <wx/textctrl.h>
 #include <wx/button.h>
-#include <wx/panel.h>
 #include "image_container.hpp"
-
+#include "image_handler.hpp"
  
-//number of Landsat bands to work with
-#define N 8
 
 enum
   {
@@ -34,14 +30,13 @@ enum
 class MainFrame : public wxFrame
 {
 	private:
+	    
+        ImageHandler    *imghandler;
+        
         wxToolBar       *menubar;
         wxToolBar       *operationsbar;
         wxTextCtrl      *formula;
         ImageContainer  *ic;
-        //Landsat Bands
-        wxImage*        BANDS[N] = {NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL};
-        
-        std::string       IMAGE_PATH[N];
         
         void OnLoadFromDir(wxCommandEvent& event);
         void OnLoadImage(wxCommandEvent& event);
@@ -60,11 +55,6 @@ class MainFrame : public wxFrame
 
 	public:
 		MainFrame(wxWindow *parent, const wxString &title = wxT("Satellite Image Processing Project"), wxWindowID id = 1, const wxPoint& pos = wxDefaultPosition, const wxSize& mf_size = wxSize(1200, 800), const long style = wxDEFAULT_FRAME_STYLE);
-
-    
-  
-		wxString toPostfix(wxString str);
-
 		~MainFrame();
 
 };

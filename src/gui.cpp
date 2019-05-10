@@ -1,10 +1,10 @@
 
 #include <opencv2/core.hpp>
 #include <opencv2/highgui.hpp>
+#include <wx/filedlg.h>
+#include <dirent.h>
 #include "xpm_icons.hpp"
 #include "gui.hpp"
-#include "handler.hpp"
-#include <dirent.h>
 
 using namespace std;
 
@@ -175,11 +175,15 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     mainsizer->Add(displaypanel, 1, wxEXPAND | wxALL, 10);
     
     SetSizer(mainsizer);
+    
+    //object manipulating image operations
+    imghandler = new ImageHandler();
+    
 }
 
 void MainFrame::OnLoadFromDir( wxCommandEvent& event )
 {
-    cout<<"Clear Image..."<<endl;
+    SetTitle("");
     wxDirDialog dlg(NULL, "Choose input directory", "",
                 wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
 
@@ -207,7 +211,7 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
         for (int i = 0; i < filenames.size(); ++i)
             if (i <= B8 - B1)
             {
-                IMAGE_PATH[i] = filenames[i];
+                imghandler->AddImagePath(filenames[i]);
                 menubar->SetToolNormalBitmap(B1+i, wxBitmap(color_image_icon));
             }
     }
@@ -216,7 +220,7 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
 
 void MainFrame::OnLoadImage( wxCommandEvent& event )
 {
-   cout<<"Load Images from dir..."<<endl;
+   SetTitle("");
    //ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
    int id = event.GetId();
    //load image file
@@ -227,7 +231,7 @@ void MainFrame::OnLoadImage( wxCommandEvent& event )
 
 	if (dlg.ShowModal() == wxID_OK) // If the user clicked "OK"
 	{
-		IMAGE_PATH[id - B1] = dlg.GetPath();
+		imghandler->SetImagePath((string)dlg.GetPath().c_str(), id - B1);
 		SetTitle(wxString("Loaded image - ") << dlg.GetFilename());
 		// set button image
         menubar->SetToolNormalBitmap(id, wxBitmap(color_image_icon));
@@ -238,65 +242,66 @@ void MainFrame::OnLoadImage( wxCommandEvent& event )
 
 void MainFrame::OnDiscardAllImages( wxCommandEvent& event )
 {
-    cout<<"Discard All Image..."<<endl;
+    SetTitle("");
     //change icons in menubar
     for(int id = B1; id <= B8; id++)
         menubar->SetToolNormalBitmap(id, wxBitmap(add_image_icon));
-
-    for(int i = 0; i < N; i++)
-        if (BANDS[i] != NULL) 
-        {
-            free(BANDS[i]);
-            BANDS[i] = NULL;
-            IMAGE_PATH[i] = "";
-        }
+     
+    imghandler->ResetImagePaths();
 }
 
 void MainFrame::OnImageSaveAs(wxCommandEvent& event)
 {
-   cout<<"Save Image..."<<endl;
-   wxFileDialog dlg(
-		this, _("Save File As _?"), wxEmptyString, wxEmptyString,
-		_("Image files|*.tif;*.tiff;*.TIF;*.TIFF;*.png;*.PNG;*.jpeg;*.jpg;*.JPG;*.JPEG|TIF Files (*.tif;*.tiff)|*.tif;*.tiff;*.TIF;*.TIFF|PNG files (*.png)|*.png;*.PNG|JPEG Files (*.jpeg;*.jpg)|*.jpeg;*.jpg;*.JPG;*.JPEG"),
-		wxFD_SAVE | wxFD_OVERWRITE_PROMPT, wxDefaultPosition);
+    SetTitle("");
+    wxFileDialog dlg(
+	    this, _("Save File As _?"), wxEmptyString, wxEmptyString,
+	    _("Image files|*.tif;*.tiff;*.TIF;*.TIFF;*.png;*.PNG;*.jpeg;*.jpg;*.JPG;*.JPEG|TIF Files (*.tif;*.tiff)|*.tif;*.tiff;*.TIF;*.TIFF|PNG files (*.png)|*.png;*.PNG|JPEG Files (*.jpeg;*.jpg)|*.jpeg;*.jpg;*.JPG;*.JPEG"),
+	    wxFD_SAVE | wxFD_OVERWRITE_PROMPT, wxDefaultPosition);
 
-	if (dlg.ShowModal() == wxID_OK)
-	{
-		ic->SaveImage(dlg.GetPath());
-		SetTitle(wxString("Saved image to - ") << dlg.GetFilename());
-	}
+    if (dlg.ShowModal() == wxID_OK)
+    {
+	    imghandler->SaveImage((string)dlg.GetPath());
+	    SetTitle(wxString("Saved image to - ") << dlg.GetFilename());
+    }
 }
 
 void MainFrame::OnImageRemove(wxCommandEvent& event)
 {
-  
+   SetTitle("");
    cout<<"Remove Image..."<<endl;
 }
 
 
 void MainFrame::OnExit( wxCommandEvent& event )
 {
-  cout<<"Exiting..."<<endl;
+  SetTitle("Exiting...");
   Close(TRUE);
   
 }
 
 void MainFrame::OnGenerateImage(wxCommandEvent& event)
 {
-
-   cout<<"Generate Image..."<<endl;
+   SetTitle("Generating RGB image ....");
+   
+   if (((wxRadioButton*)operationsbar->FindControl(RADIO_RGB))->GetValue())
+   {
+        wxImage* img = imghandler->GetRGBImage();
+        if (img)
+        {
+            ic->SetImage(*img);
+            SetTitle("");
+        }
+        else
+            SetTitle("Failed to generate RGB Image.");
+   }
 }
 
 
 void MainFrame::OnRadioStatusChange(wxCommandEvent& event)
 {
+    SetTitle("");
     if (((wxRadioButton*)operationsbar->FindControl(RADIO_FORMULA))->GetValue())
         formula->Enable();
     else
         formula->Disable();
-}
-
-wxString MainFrame::toPostfix(wxString str)
-{
-    return str;
 }
