@@ -1,13 +1,17 @@
 #include <math.h>
 #include <iostream>
+#include <vector>
+#include <opencv2/opencv.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include "image_handler.hpp"
 
 using namespace std;
+using namespace cv;
 
 ImageHandler::ImageHandler()
 {
     //the current processed image
-    Image = NULL;
+    image = NULL;
 }
 
 wxImage* ImageHandler::GetRGBImage()
@@ -15,22 +19,45 @@ wxImage* ImageHandler::GetRGBImage()
     if (paths[R] == "" || paths[G] == "" || paths[B] == "")
         return NULL;
     
+    Mat blue  = imread(paths[B], IMREAD_GRAYSCALE);
+    Mat green = imread(paths[G], IMREAD_GRAYSCALE);
+    Mat red   = imread(paths[R], IMREAD_GRAYSCALE);
     
-    return NULL;
+    vector<Mat> channels = {blue, green, red};
+
+    Mat bgr;
+    merge(channels, bgr);
+    //imwrite("merged.png", bgr);
+    
+    long size = bgr.cols * bgr.rows * 3;
+    if(image != NULL) free(image);
+    image = new wxImage(bgr.cols, bgr.rows,(unsigned char*)malloc(size), false);
+	unsigned char* src  = bgr.data;
+	unsigned char* dest = image->GetData();
+	for (long i = 0; i < size; i=i+3) 
+	{ 
+	    dest[i] = src[i+2];
+	    dest[i+1] = src[i+1];
+	    dest[i+2] = src[i];
+	}
+	
+    return image;
     
 }
 
 void ImageHandler::AddImagePath(string path)
 {
+    cout<<"Add path : "<<path<<endl;
     int i = 0;
-    while(paths[i] == "")
+    while(paths[i] != "" && i < N)
         i++;
-        
-    paths[i] = path;
+    if (i >= 0 && i < N)    
+        paths[i] = path;
 }
 
 void ImageHandler::SetImagePath(string path, int index)
 {
+    cout<<" Set image path: "<<path<<" at "<<index<<endl; 
     paths[index] = path;
 }
 
@@ -38,13 +65,19 @@ void ImageHandler::ResetImagePaths()
 {
     for (int i = 0; i < N; i++)
         paths[i].clear();
-    if (Image)  free(Image);
-    Image = NULL;
+    if (image)  free(image);
+    image = NULL;
 
 }
 void ImageHandler::SaveImage(string path)
 {
     cout<<"Saving image to "<<path<<" .... ";
+    
+    /*Mat im2(Size(wx.GetWidth(),wx.GetHeight()),CV_8UC3,wx.GetData());
+    cvtColor(im2,im2,COLOR_RGB2BGR);
+    return im2;
+    
+    imwrite(path, image);*/
 };
   /*
     wxImage* GenerateImage(wxImage* red, wxImage* green, wxImage* blue)

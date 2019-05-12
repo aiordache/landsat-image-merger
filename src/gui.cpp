@@ -1,11 +1,10 @@
 
-#include <opencv2/core.hpp>
-#include <opencv2/highgui.hpp>
 #include <wx/filedlg.h>
 #include <dirent.h>
 #include "xpm_icons.hpp"
 #include "gui.hpp"
-
+#include <vector>
+#include <algorithm>
 using namespace std;
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
@@ -159,7 +158,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 
     wxPanel* displaypanel = new wxPanel(this, wxID_ANY);
     ic = new ImageContainer(displaypanel, wxID_ANY);
-    ic->SetImage(wxImage("resources/image.tif"));
+    ic->SetImage(new wxImage("resources/image.tif"));
     
     
     wxBoxSizer* displaysizer = new wxBoxSizer(wxVERTICAL);
@@ -194,20 +193,21 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
         DIR* dirp = opendir(path.c_str());
         struct dirent * ent;
         wxString extension[] = {".jpg", ".tif",".png",".jpeg", ".tiff"};
+        
         vector<string> filenames;
 
         while ((ent = readdir(dirp)) != NULL) {
             wxString s = ent->d_name;
             for(int i=0;i<5; i++)
                 if (s.Lower().EndsWith(extension[i]))
-                    filenames.push_back((string)s.c_str());
+                    filenames.push_back((string)path.c_str() + "/" +(string)s.c_str());
         }
         closedir(dirp);
         //discard previous images if any
         OnDiscardAllImages(event);
 
         //sort filenames
-        sort(filenames.begin(), filenames.end());
+        std::sort(filenames.begin(), filenames.end());
         for (int i = 0; i < filenames.size(); ++i)
             if (i <= B8 - B1)
             {
@@ -286,9 +286,9 @@ void MainFrame::OnGenerateImage(wxCommandEvent& event)
    if (((wxRadioButton*)operationsbar->FindControl(RADIO_RGB))->GetValue())
    {
         wxImage* img = imghandler->GetRGBImage();
-        if (img)
+        if (img != NULL)
         {
-            ic->SetImage(*img);
+            ic->SetImage(img);
             SetTitle("");
         }
         else

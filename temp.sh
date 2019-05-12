@@ -1,5 +1,5 @@
 #!/bin/bash
-IMAGEID=devbase
+IMAGEID=opencv
 # set xorg access on host
 xhost +local:docker
 ABS_PATH="$(pwd)"

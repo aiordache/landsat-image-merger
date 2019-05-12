@@ -16,14 +16,11 @@ ImageContainer::ImageContainer(wxWindow* parent, wxWindowID id) : wxScrolledWind
 
 ImageContainer::~ImageContainer()
 {
-    delete image;
 };
 
-void ImageContainer::SetImage(wxImage img)
+void ImageContainer::SetImage(wxImage* img)
 {
-    
-    delete image; image = NULL;
-    image = new wxImage(img);
+    image = img;
     rect = wxRect(0, 0 , image->GetWidth(), image->GetHeight());
     FitToCanvas();
 

@@ -28,5 +28,5 @@ class ImageContainer : public wxScrolledWindow
     	ImageContainer(wxWindow* parent, wxWindowID id);
     	~ImageContainer();
 
-    	void SetImage(wxImage img);
+    	void SetImage(wxImage* img);
 };
