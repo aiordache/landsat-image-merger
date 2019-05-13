@@ -19,27 +19,24 @@ wxImage* ImageHandler::GetRGBImage()
     if (paths[R] == "" || paths[G] == "" || paths[B] == "")
         return NULL;
     
-    Mat blue  = imread(paths[B], IMREAD_GRAYSCALE);
-    Mat green = imread(paths[G], IMREAD_GRAYSCALE);
-    Mat red   = imread(paths[R], IMREAD_GRAYSCALE);
+    Mat blue  = imread(paths[B], CV_8UC1);
+    Mat green = imread(paths[G], CV_8UC1);
+    Mat red   = imread(paths[R], CV_8UC1);
+    
     
     vector<Mat> channels = {blue, green, red};
-
-    Mat bgr;
-    merge(channels, bgr);
-    //imwrite("merged.png", bgr);
+    Mat color(blue.size(), CV_8UC3);
     
-    long size = bgr.cols * bgr.rows * 3;
+    merge(channels, color);
+    //imwrite("merged.png", color);
+    cvtColor(color, color, COLOR_BGR2RGB);
+    
+    long size = color.cols * color.rows * 3;
+    
     if(image != NULL) free(image);
-    image = new wxImage(bgr.cols, bgr.rows,(unsigned char*)malloc(size), false);
-	unsigned char* src  = bgr.data;
-	unsigned char* dest = image->GetData();
-	for (long i = 0; i < size; i=i+3) 
-	{ 
-	    dest[i] = src[i+2];
-	    dest[i+1] = src[i+1];
-	    dest[i+2] = src[i];
-	}
+    
+    image = new wxImage(color.cols, color.rows,(unsigned char*)malloc(size), false);
+    memcpy(image->GetData(), color.data, size);
 	
     return image;
     
@@ -79,6 +76,12 @@ void ImageHandler::SaveImage(string path)
     
     imwrite(path, image);*/
 };
+
+wxImage* ImageHandler::GetImage()
+{
+    return image;
+};
+
   /*
     wxImage* GenerateImage(wxImage* red, wxImage* green, wxImage* blue)
     {

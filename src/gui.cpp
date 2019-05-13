@@ -260,7 +260,9 @@ void MainFrame::OnImageSaveAs(wxCommandEvent& event)
 
     if (dlg.ShowModal() == wxID_OK)
     {
-	    imghandler->SaveImage((string)dlg.GetPath());
+        
+        imghandler->GetImage()->SaveFile((string)dlg.GetPath(), wxBITMAP_TYPE_JPEG);
+	    //imghandler->SaveImage((string)dlg.GetPath());
 	    SetTitle(wxString("Saved image to - ") << dlg.GetFilename());
     }
 }
@@ -290,6 +292,8 @@ void MainFrame::OnGenerateImage(wxCommandEvent& event)
         {
             ic->SetImage(img);
             SetTitle("");
+            
+            
         }
         else
             SetTitle("Failed to generate RGB Image.");

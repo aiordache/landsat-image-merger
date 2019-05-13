@@ -48,6 +48,7 @@ class ImageHandler
         void SetImagePath(std::string path, int index);
         void ResetImagePaths();
         void SaveImage(std::string path);
+        wxImage* GetImage(); 
         /*
         wxImage* GenerateImage(wxImage* red, wxImage* green, wxImage* blue);
 
