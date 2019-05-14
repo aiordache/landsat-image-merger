@@ -24,7 +24,12 @@ enum
     GENERATE_BUTTON,
     RADIO_RGB,
     RADIO_NDVI,
-    RADIO_FORMULA
+    RADIO_NDWI,
+    RADIO_FORMULA,
+    COLOR_START,
+    COLOR_END,
+    RADIO_DEF_COL_PALETTE,
+    RADIO_CUSTOM_COL_PALETTE
   };
  
  
@@ -36,6 +41,7 @@ class MainFrame : public wxFrame
         
         wxToolBar       *menubar;
         wxToolBar       *operationsbar;
+        wxToolBar       *palettebar;
         wxTextCtrl      *formula;
         ImageContainer  *ic;
         
@@ -49,6 +55,7 @@ class MainFrame : public wxFrame
 
 	    void OnGenerateImage(wxCommandEvent& event);
         void OnRadioStatusChange(wxCommandEvent& event);
+        void OnPaletteRadioStatusChange(wxCommandEvent& event);
         void CreateGUIControls(const wxSize& mf_size);
 
 

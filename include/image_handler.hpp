@@ -1,13 +1,10 @@
 #include <wx/image.h>
+#include "utils.hpp"
 
 //number of Landsat bands to work with
 #define N 8
 
 
-typedef struct
-{
-  unsigned char B, G, R;
-} RgbPixel;
 
 
 enum 
@@ -34,24 +31,28 @@ class ImageHandler
         wxImage*        BANDS[N] = {NULL, NULL,NULL,NULL,NULL,NULL,NULL,NULL};
         
         std::string     paths[N] = {"","","","","","","",""};
-        int width;
-        int height;
+        int             width;
+        int             height;
 
-        RgbPixel colors[256];
+        Color           colors[256];
+        
+        
+        void            LoadPalette(const char* palette);     
+        wxImage*        GenerateCommonFormulaIndexImage(std::string band1, std::string band2);
     public:
         ImageHandler();
         
         
         
-        void AddImagePath(std::string path);
-        void SetImagePath(std::string path, int index);
-        void ResetImagePaths();
-        void LoadPalette();
-        wxImage* GetImage(); 
+        void            AddImagePath(std::string path);
+        void            SetImagePath(std::string path, int index);
+        void            ResetImagePaths();
+        wxImage*        GetImage();
         
         
-        wxImage* GetRGBImage();
-        wxImage* ComputeNDVI();
+        wxImage*        GetRGBImage();
+        wxImage*        ComputeNDVI();
+        wxImage*        ComputeNDWI();
         
         /*
         wxImage* GenerateImage(wxImage* red, wxImage* green, wxImage* blue);

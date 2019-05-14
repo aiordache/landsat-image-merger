@@ -14,7 +14,6 @@ ImageHandler::ImageHandler()
 {
     //the current processed image
     image = NULL;
-    LoadPalette();
 }
 
 void ImageHandler::AddImagePath(string path)
@@ -42,34 +41,33 @@ void ImageHandler::ResetImagePaths()
 
 }
 
-void ImageHandler::LoadPalette()
+void ImageHandler::LoadPalette(const char* palette)
+{
+    FILE *fp;
+    fp = fopen(palette, "r");
+
+    if(fp == NULL)
     {
-
-        FILE *fp;
-        fp = fopen("resources/NDVI.pal", "r");
-
-        if(fp == NULL)
-        {
-            printf("file not found!\n");
-            exit(0);
-        }
-        else
-        {
-            int i = 0, j = 0;
-            int index = 0, r = 0, g = 0, b=0;
-            while(!feof(fp))
-            {
-                fscanf(fp, "%d", &index);
-                fscanf(fp, "%d", &r);
-                fscanf(fp, "%d", &g);
-                fscanf(fp, "%d", &b);
-                colors[index].B = b;
-                colors[index].G = g;
-                colors[index].R = r;
-            }
-            fclose(fp) ;
-        }
+        printf("file not found!\n");
+        exit(0);
     }
+    else
+    {
+        int i = 0, j = 0;
+        int index = 0, r = 0, g = 0, b=0;
+        while(!feof(fp))
+        {
+            fscanf(fp, "%d", &index);
+            fscanf(fp, "%d", &r);
+            fscanf(fp, "%d", &g);
+            fscanf(fp, "%d", &b);
+            colors[index].B = b;
+            colors[index].G = g;
+            colors[index].R = r;
+        }
+        fclose(fp) ;
+    }
+}
 
 
 wxImage* ImageHandler::GetImage()
@@ -104,44 +102,70 @@ wxImage* ImageHandler::GetRGBImage()
     return image;
 }
 
+wxImage* ImageHandler::GenerateCommonFormulaIndexImage(std::string band1, std::string band2)
+{
+    /*
+        Several indexes are calculated using the formula
+        INDEX = (B1 - B2)/(B1 + B2)
+    */
+    Mat B1   = imread(band1, CV_8UC1);
+    Mat B2   = imread(band2, CV_8UC1);        
+    
+    if (B1.size() != B2.size())
+        return NULL;
+    
+    Mat img = Mat::zeros(B1.size(), CV_8UC3);
+    
+    long size = B1.cols * B1.rows;
+    for(int i = 0; i < size; i++)
+    {
+        float value = (B1.data[i] == B2.data[i]) ? 0 : (float)(B1.data[i] - B2.data[i])/(float)(B1.data[i] + B2.data[i]);
+        // transform from [-1, 1] to [0, 255]
+        unsigned char color = (unsigned char)128 * value + 128; 
+        
+        img.data[i * 3] = (unsigned char)(colors[color].B);
+        img.data[i * 3 + 1] = (unsigned char)(colors[color].G);
+        img.data[i * 3 + 2] = (unsigned char)(colors[color].R);
+    }
+    
+    imwrite("index.png", img);
+    cvtColor(img, img, COLOR_BGR2RGB); 
+      
+    size = size * 3;
+        
+    if(image != NULL) free(image);
+    
+    image = new wxImage(img.cols, img.rows,(unsigned char*)malloc(size), false);
+    memcpy(image->GetData(), img.data, size);
+	
+    return image;
+}
+
+
+
 wxImage* ImageHandler::ComputeNDVI()
 {
     /*
         Normalized Difference Vegetation Index (NDVI) uses the NIR and red channels in its formula.
         NDVI = (NIR - RED)/(NIR + RED)
     */
+    
+    LoadPalette("resources/colors.pal");
+    return GenerateCommonFormulaIndexImage(paths[NIR], paths[R]);
+}
 
-    Mat red   = imread(paths[R], CV_8UC1);
-    Mat nir   = imread(paths[NIR], CV_8UC1);        
-    
-    if (red.size() != nir.size())
-        return NULL;
-    
-    Mat ndvi = Mat::zeros(red.size(), CV_8UC3);
-    
-    long size = red.cols * red.rows;
-    for(int i = 0; i < size; i++)
-    {
-        float value = (nir.data[i] == red.data[i]) ? 0 : (float)(nir.data[i] - red.data[i])/(float)(nir.data[i] + red.data[i]);
-        // transform from [-1, 1] to [0, 255]
-        unsigned char color = (unsigned char)128 * value + 128; 
-        
-        ndvi.data[i * 3] = (unsigned char)(colors[color].B);
-        ndvi.data[i * 3 + 1] = (unsigned char)(colors[color].G);
-        ndvi.data[i * 3 + 2] = (unsigned char)(colors[color].R);
-    }
-    
-    imwrite("ndvi.png", ndvi);
-    cvtColor(ndvi, ndvi, COLOR_BGR2RGB); 
-      
-    size = size * 3;
-        
-    if(image != NULL) free(image);
-    
-    image = new wxImage(ndvi.cols, ndvi.rows,(unsigned char*)malloc(size), false);
-    memcpy(image->GetData(), ndvi.data, size);
-	
-    return image;
+
+
+
+wxImage* ImageHandler::ComputeNDWI()
+{
+    /*
+    Normalized Difference Water Index (NDWI), introduced for the first time in 1996 in Gao (Gao), reflects moisture content in plants and soil and is determined by analogy with NDVI as
+
+    NDWI = (NIR - SWIR)/(NIR + SWIR)
+    */
+    LoadPalette("resources/colors.pal");
+    return GenerateCommonFormulaIndexImage(paths[NIR], paths[SWIR1]);
 }
 
 
@@ -150,146 +174,7 @@ wxImage* ImageHandler::ComputeNDVI()
 
 
 
-
-
-
-
-
-
-  /*
-    wxImage* GenerateImage(wxImage* red, wxImage* green, wxImage* blue)
-    {
-        int i,j;
-
-        if (Image != 0)
-                Image = 0;
-        Image = GenerateImage(wxSize(red->GetWidth(), red->GetHeight()),CV_DEPTH_MAX,3);
-
-        cvMerge(blue, green, red, NULL, Image);
-
-        return Image;
-    }
-
-    wxImage* ComputeNDVI(wxImage* red, wxImage* infrared)
-    {
-        int k = 0;
-        float f = 0.0;
-        int i, j;
-
-        if (Image != 0)
-                Image = 0;
-
-        wxImage* ndvi = GenerateImage(wxSize(red->GetWidth(), red->GetHeight()),IPL_DEPTH_32F,1);
-
-        for (i = 0; i < red->GetHeight(); i++)
-        {
-            unsigned char* row = &CV_IMAGE_ELEM( red, unsigned char, i, 0 );
-            unsigned char* roww = &CV_IMAGE_ELEM( infrared, unsigned char, i, 0 );
-
-            for( int j = 0; j < red->GetWidth(); j++)
-            {
-                f = (float)(roww[j] - row[j])/(float)(row[j] + roww[j]);
-                ((float*)ndvi->m_refData)[i *  ndvi->GetWidth() + j] = 128 + 128*f;
-            }
-        }
-
-        Image = GenerateImage(wxSize(red->GetWidth(), red->GetHeight()),CV_DEPTH_MAX,1);
-
-        cvConvertScale(ndvi, Image, 1, 0);
-
-        return Image;
-    }
-
-    wxImage* ComputeColoredNDVI(wxImage* red, wxImage* infrared)
-    {
-        int k = 0;
-        float f = 0.0;
-        int i, j;
-
-        LoadPalette();
-
-        if (Image != 0)
-                Image = 0;
-
-        Image = GenerateImage(wxSize(red->GetWidth(), red->GetHeight()),CV_DEPTH_MAX,3);
-
-        for (i = 0; i < red->height; i++)
-        {
-            unsigned char* row = &CV_IMAGE_ELEM( red, unsigned char, i, 0 );
-            unsigned char* roww = &CV_IMAGE_ELEM( infrared, unsigned char, i, 0 );
-            unsigned char* rowc = &CV_IMAGE_ELEM( Image, unsigned char, i, 0 );
-
-            for( int j = 0; j < red->GetWidth(); j++)
-            {
-                f = (float)(roww[j] - row[j])/(float)(row[j] + roww[j]);
-                rowc[j * 3] = (unsigned char)(colors[(unsigned char)(128 + 128 * f)].B);
-                rowc[j * 3 + 1] = (unsigned char)(colors[(unsigned char)(128 + 128 * f)].G);
-                rowc[j * 3 + 2] = (unsigned char)(colors[(unsigned char)(128 + 128 * f)].R);
-            }
-        }
-
-        return Image;
-    }
-
-    wxImage* ComputeNDWI(wxImage* infrared, wxImage* mirinfrared)
-    {
-        int k = 0;
-        float f = 0.0;
-        int i, j;
-
-        if (Image != 0)
-                Image = 0;
-
-        wxImage* ndwi = GenerateImage(wxSize(infrared->GetWidth(), infrared->GetHeight()),IPL_DEPTH_32F,1);
-
-        for (i = 0; i < infrared->GetHeight(); i++)
-        {
-            unsigned char* row = &CV_IMAGE_ELEM( infrared, unsigned char, i, 0 );
-            unsigned char* roww = &CV_IMAGE_ELEM( mirinfrared, unsigned char, i, 0 );
-
-            for( int j = 0; j < infrared->GetWidth(); j++)
-            {
-                f = (float)(row[j] - roww[j])/(float)(row[j] + roww[j]);
-                ((float*)ndwi->m_refData)[i *  ndwi->GetWidth() + j] = 128 + 128*f;
-            }
-        }
-
-        Image = GenerateImage(wxSize(infrared->GetWidth(), infrared->GetHeight()),CV_DEPTH_MAX,1);
-
-        cvConvertScale(ndwi, Image, 1, 0);
-
-        return Image;
-    }
-
-    wxImage*  ComputeColoredNDWI(wxImage* infrared, wxImage* mirinfrared)
-    {
-        int k = 0;
-        float f = 0.0;
-        int i, j;
-
-        LoadPalette();
-
-        if (Image != 0)
-                Image = 0;
-        Image = GenerateImage(wxSize(infrared->GetWidth(), infrared->GetHeight()),CV_DEPTH_MAX, 3);
-
-        for (i = 0; i < infrared->GetHeight(); i++)
-        {
-            unsigned char* row = &CV_IMAGE_ELEM( infrared, unsigned char, i, 0 );
-            unsigned char* roww = &CV_IMAGE_ELEM( mirinfrared, unsigned char, i, 0 );
-            unsigned char* rowc = &CV_IMAGE_ELEM( Image, unsigned char, i, 0 );
-
-            for( int j = 0; j < infrared->GetWidth(); j++)
-            {
-                f = (float)(row[j] - roww[j])/(float)(row[j] + roww[j]);
-                rowc[j * 3] = (unsigned char)(colors[(unsigned char)(128 + 128 * f)].B);
-                rowc[j * 3 + 1] = (unsigned char)(colors[(unsigned char)(128 + 128 * f)].G);
-                rowc[j * 3 + 2] = (unsigned char)(colors[(unsigned char)(128 + 128 * f)].R);
-            }
-        }
-
-        return Image;
-    }
+/*
 
     wxImage* ComputeIndex(wxImage* list[], char* str)
     {
@@ -380,129 +265,7 @@ wxImage* ImageHandler::ComputeNDVI()
         return Image;
     }
 
-
-    wxImage* ComputeColoredIndex(wxImage* list[], char* str)
-    {
-        int n = 0;
-        n = strlen(str);
-
-        LoadPalette();
-
-        wxImage* Image = GenerateImage(wxSize(list[0]->GetWidth(), list[0]->GetHeight()),CV_DEPTH_MAX,3);
-
-        int index = 0;
-        for (int i = 0; i < Image->GetHeight(); i++)
-        {
-            unsigned char k1 = 0;
-            unsigned char* row[7];
-
-            while(list[k1]!= 0)
-            {
-                row[k1] = &CV_IMAGE_ELEM(list[k1], unsigned char, i, 0 );
-                k1++;
-            }
-
-            unsigned char* imgrow = &CV_IMAGE_ELEM( Image, unsigned char, i, 0 );
-
-            for( int j = 0; j < Image->GetWidth(); j++)
-            {
-                float value[20];
-
-                index = 0;
-                int index = 0;
-
-                int k = 0;
-                while(k < n)
-                {
-                    switch(str[k])
-                    {
-                        case '+':
-                            {
-                                value[index - 2] = value[index - 1] + value[index - 2];
-                                index = index - 1;
-                                break;
-                            }
-                        case '-':
-                            {
-                                value[index - 2] = value[index - 1] - value[index - 2];
-                                index = index - 1;
-                                break;
-                            }
-                        case '*':
-                            {
-                                value[index - 2] = value[index - 1] * value[index - 2];
-                                index = index - 1;
-                                break;
-                            }
-                        case '/':
-                            {
-                                value[index - 2] =(float) 128 + 128*(value[index - 1] / (float)value[index - 2]);
-                                index = index - 1;
-                                break;
-                            }
-                        case 'b':
-                            {
-                                value[index] = (float)(row[(int)(str[k + 1] - '0')][j]);
-                                k++;
-                                index++;
-                                break;
-                            }
-                        default:
-                            {
-
-                                float no = 0.0;
-                                int x = k;
-                                while(str[x] >= '0' && str[x] <= '9')
-                                x++;
-                                //form the scalar from string
-                                for(int q = k; q < x; q++)
-                                    no = no * 10 + (str[q] - '0');
-
-                                value[index] = no;
-                                index++;
-                                break;
-                            }
-                    }
-                    k++;
-                }
-                 imgrow[j * 3] = (unsigned char)(colors[(unsigned char)(value[0])].B);
-                 imgrow[j * 3 + 1] = (unsigned char)(colors[(unsigned char)(value[0])].G);
-                 imgrow[j * 3 + 2] = (unsigned char)(colors[(unsigned char)(value[0])].R);
-            }
-        }
-
-        return Image;
-    }
-
-    void LoadPalette()
-    {
-
-        FILE *fp;
-        fp = fopen("resources/NDVI_DOS.pal", "r");
-
-        if(fp == NULL)
-        {
-            printf("file not found!\n");
-            exit(0);
-        }
-        else
-        {
-            int i = 0, j = 0;
-            int pos = 0, r = 0, g = 0, b=0;
-            while(!feof(fp))
-            {
-                fscanf(fp, "%d", &pos);
-                fscanf(fp, "%d", &r);
-                fscanf(fp, "%d", &g);
-                fscanf(fp, "%d", &b);
-                colors[pos].B = b;
-                colors[pos].G = g;
-                colors[pos].R = r;
-            }
-
-            fclose(fp) ;
-        }
-    }*/
+*/
 
 
 

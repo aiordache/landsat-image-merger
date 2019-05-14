@@ -1,10 +1,6 @@
 CC=g++
-#CFLAGS+=`pkg-config --cflags opencv`
-CFLAGS+=`wx-config --cxxflags --libs std` -I/usr/local/include/opencv4/
-#/usr/include /usr/lib
-#LDFLAGS+=`pkg-config --libs opencv`
-LDFLAGS+=-lpthread -lboost_system -lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs
-#/usr/lib /usr/include
+CFLAGS+=`wx-config --cxxflags --libs std` -I/usr/local/include/opencv4/ -I./include
+LDFLAGS+=-lopencv_core -lopencv_imgproc -lopencv_highgui -lopencv_imgcodecs
 BUILDDIR  = build
 BINDIR    = bin
 SOURCEDIR = src

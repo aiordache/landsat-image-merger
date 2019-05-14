@@ -1,5 +1,6 @@
 
 #include <wx/filedlg.h>
+#include <wx/clrpicker.h>
 #include <dirent.h>
 #include "xpm_icons.hpp"
 #include "gui.hpp"
@@ -23,11 +24,14 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
  EVT_MENU(B7,   MainFrame::OnLoadImage)
  EVT_MENU(B8,   MainFrame::OnLoadImage)
 
- EVT_BUTTON(GENERATE_BUTTON, MainFrame::OnGenerateImage)
- EVT_RADIOBUTTON(RADIO_RGB, MainFrame::OnRadioStatusChange)
-  EVT_RADIOBUTTON(RADIO_NDVI, MainFrame::OnRadioStatusChange)
+ EVT_BUTTON(GENERATE_BUTTON,    MainFrame::OnGenerateImage)
+ EVT_RADIOBUTTON(RADIO_RGB,     MainFrame::OnRadioStatusChange)
+ EVT_RADIOBUTTON(RADIO_NDVI,    MainFrame::OnRadioStatusChange)
+ EVT_RADIOBUTTON(RADIO_NDWI,    MainFrame::OnRadioStatusChange)
  EVT_RADIOBUTTON(RADIO_FORMULA, MainFrame::OnRadioStatusChange)
 
+ EVT_RADIOBUTTON(RADIO_DEF_COL_PALETTE,    MainFrame::OnPaletteRadioStatusChange)
+ EVT_RADIOBUTTON(RADIO_CUSTOM_COL_PALETTE, MainFrame::OnPaletteRadioStatusChange)
 END_EVENT_TABLE()
 
 
@@ -140,7 +144,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     // OPERATIONS TOOLBAR
 
     operationsbar = new wxToolBar(this, wxID_ANY);
-
+    
     formula = new wxTextCtrl(operationsbar, wxID_ANY,
         "",wxDefaultPosition, wxSize(200, 30));
     formula->SetFont(wxFont(14, wxDECORATIVE, wxITALIC, wxNORMAL));
@@ -150,13 +154,29 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_RGB, _T("RGB")));
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_NDVI, _T("NDVI")));
+    operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_NDWI, _T("NDWI")));
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_FORMULA, _T("Pixel Formula")));
-    
     operationsbar->AddControl(formula);
+    
     operationsbar->AddStretchableSpace();
     operationsbar->AddControl(new wxButton(operationsbar, GENERATE_BUTTON, _T("Generate IMAGE"), wxDefaultPosition, wxDefaultSize, 0));
     operationsbar->AddStretchableSpace();    
     operationsbar->Realize();
+
+    
+    
+    palettebar    = new wxToolBar(this, wxID_ANY);
+    palettebar->AddStretchableSpace();
+    palettebar->AddControl(new wxRadioButton(palettebar, RADIO_DEF_COL_PALETTE, _T("Default Color Scheme")));
+    palettebar->AddStretchableSpace();
+    palettebar->AddControl(new wxRadioButton(palettebar, RADIO_CUSTOM_COL_PALETTE, _T("Custom Color Scheme")));
+    palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_START));
+    palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_END));
+    palettebar->AddStretchableSpace();
+    palettebar->Realize();
+    
+    palettebar->FindControl(COLOR_START)->Disable();
+    palettebar->FindControl(COLOR_END)->Disable();
 
     wxPanel* displaypanel = new wxPanel(this, wxID_ANY);
     ic = new ImageContainer(displaypanel, wxID_ANY);
@@ -169,9 +189,8 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 
     wxBoxSizer *mainsizer = new wxBoxSizer(wxVERTICAL);
     mainsizer->Add(menubar, 0, wxEXPAND);
-    mainsizer->Add(operationsbar, 0,  wxEXPAND);
-    
-    //mainsizer->Add(il, 0, wxEXPAND);
+    mainsizer->Add(operationsbar, 0, wxEXPAND | wxLEFT);
+    mainsizer->Add(palettebar, 0, wxEXPAND | wxLEFT);
     
     mainsizer->Add(displaypanel, 1, wxEXPAND | wxALL, 10);
     
@@ -286,30 +305,24 @@ void MainFrame::OnExit( wxCommandEvent& event )
 void MainFrame::OnGenerateImage(wxCommandEvent& event)
 {
    SetTitle("Generating RGB image ....");
-   
+   wxImage* img = NULL;
    if (((wxRadioButton*)operationsbar->FindControl(RADIO_RGB))->GetValue())
-   {
-        wxImage* img = imghandler->GetRGBImage();
-        if (img != NULL)
-        {
-            ic->SetImage(img);
-            SetTitle("");
-        }
-        else
-            SetTitle("Failed to generate RGB Image.");
-   }
+        img = imghandler->GetRGBImage();
    else
    if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDVI))->GetValue())
-   {
-        wxImage* img = imghandler->ComputeNDVI();
-        if (img != NULL)
-        {
-            ic->SetImage(img);
-            SetTitle("");
-        }
-        else
-            SetTitle("Failed to generate NDVI Image.");
-   }
+        img = imghandler->ComputeNDVI();
+   else
+   if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDWI))->GetValue())
+        img = imghandler->ComputeNDWI();
+        
+   
+   if (img != NULL)
+    {
+        ic->SetImage(img);
+        SetTitle("");
+    }
+    else
+        SetTitle("Failed to generate image.");
 }
 
 
@@ -320,4 +333,20 @@ void MainFrame::OnRadioStatusChange(wxCommandEvent& event)
         formula->Enable();
     else
         formula->Disable();
+}
+
+
+void MainFrame::OnPaletteRadioStatusChange(wxCommandEvent& event)
+{
+    SetTitle("");
+    if (((wxRadioButton*)palettebar->FindControl(RADIO_DEF_COL_PALETTE))->GetValue())
+    {
+        palettebar->FindControl(COLOR_START)->Disable();
+        palettebar->FindControl(COLOR_END)->Disable();
+    }
+    else
+    {
+        palettebar->FindControl(COLOR_START)->Enable();
+        palettebar->FindControl(COLOR_END)->Enable();
+    }
 }
