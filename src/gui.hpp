@@ -23,6 +23,7 @@ enum
     B1,B2,B3,B4,B5,B6,B7,B8,
     GENERATE_BUTTON,
     RADIO_RGB,
+    RADIO_NDVI,
     RADIO_FORMULA
   };
  

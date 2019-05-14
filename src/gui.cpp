@@ -25,6 +25,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
  EVT_BUTTON(GENERATE_BUTTON, MainFrame::OnGenerateImage)
  EVT_RADIOBUTTON(RADIO_RGB, MainFrame::OnRadioStatusChange)
+  EVT_RADIOBUTTON(RADIO_NDVI, MainFrame::OnRadioStatusChange)
  EVT_RADIOBUTTON(RADIO_FORMULA, MainFrame::OnRadioStatusChange)
 
 END_EVENT_TABLE()
@@ -148,6 +149,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     operationsbar->AddStretchableSpace();
     
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_RGB, _T("RGB")));
+    operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_NDVI, _T("NDVI")));
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_FORMULA, _T("Pixel Formula")));
     
     operationsbar->AddControl(formula);
@@ -292,11 +294,21 @@ void MainFrame::OnGenerateImage(wxCommandEvent& event)
         {
             ic->SetImage(img);
             SetTitle("");
-            
-            
         }
         else
             SetTitle("Failed to generate RGB Image.");
+   }
+   else
+   if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDVI))->GetValue())
+   {
+        wxImage* img = imghandler->ComputeNDVI();
+        if (img != NULL)
+        {
+            ic->SetImage(img);
+            SetTitle("");
+        }
+        else
+            SetTitle("Failed to generate NDVI Image.");
    }
 }
 

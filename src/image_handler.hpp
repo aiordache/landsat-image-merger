@@ -41,14 +41,18 @@ class ImageHandler
     public:
         ImageHandler();
         
-        wxImage* GetRGBImage();
         
         
         void AddImagePath(std::string path);
         void SetImagePath(std::string path, int index);
         void ResetImagePaths();
-        void SaveImage(std::string path);
+        void LoadPalette();
         wxImage* GetImage(); 
+        
+        
+        wxImage* GetRGBImage();
+        wxImage* ComputeNDVI();
+        
         /*
         wxImage* GenerateImage(wxImage* red, wxImage* green, wxImage* blue);
 

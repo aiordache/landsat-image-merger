@@ -8,38 +8,13 @@
 using namespace std;
 using namespace cv;
 
+
+
 ImageHandler::ImageHandler()
 {
     //the current processed image
     image = NULL;
-}
-
-wxImage* ImageHandler::GetRGBImage()
-{
-    if (paths[R] == "" || paths[G] == "" || paths[B] == "")
-        return NULL;
-    
-    Mat blue  = imread(paths[B], CV_8UC1);
-    Mat green = imread(paths[G], CV_8UC1);
-    Mat red   = imread(paths[R], CV_8UC1);
-    
-    
-    vector<Mat> channels = {blue, green, red};
-    Mat color(blue.size(), CV_8UC3);
-    
-    merge(channels, color);
-    //imwrite("merged.png", color);
-    cvtColor(color, color, COLOR_BGR2RGB);
-    
-    long size = color.cols * color.rows * 3;
-    
-    if(image != NULL) free(image);
-    
-    image = new wxImage(color.cols, color.rows,(unsigned char*)malloc(size), false);
-    memcpy(image->GetData(), color.data, size);
-	
-    return image;
-    
+    LoadPalette();
 }
 
 void ImageHandler::AddImagePath(string path)
@@ -66,21 +41,120 @@ void ImageHandler::ResetImagePaths()
     image = NULL;
 
 }
-void ImageHandler::SaveImage(string path)
-{
-    cout<<"Saving image to "<<path<<" .... ";
-    
-    /*Mat im2(Size(wx.GetWidth(),wx.GetHeight()),CV_8UC3,wx.GetData());
-    cvtColor(im2,im2,COLOR_RGB2BGR);
-    return im2;
-    
-    imwrite(path, image);*/
-};
+
+void ImageHandler::LoadPalette()
+    {
+
+        FILE *fp;
+        fp = fopen("resources/NDVI.pal", "r");
+
+        if(fp == NULL)
+        {
+            printf("file not found!\n");
+            exit(0);
+        }
+        else
+        {
+            int i = 0, j = 0;
+            int index = 0, r = 0, g = 0, b=0;
+            while(!feof(fp))
+            {
+                fscanf(fp, "%d", &index);
+                fscanf(fp, "%d", &r);
+                fscanf(fp, "%d", &g);
+                fscanf(fp, "%d", &b);
+                colors[index].B = b;
+                colors[index].G = g;
+                colors[index].R = r;
+            }
+            fclose(fp) ;
+        }
+    }
+
 
 wxImage* ImageHandler::GetImage()
 {
     return image;
 };
+
+
+wxImage* ImageHandler::GetRGBImage()
+{
+    if (paths[R] == "" || paths[G] == "" || paths[B] == "")
+        return NULL;
+    
+    Mat blue  = imread(paths[B], CV_8UC1);
+    Mat green = imread(paths[G], CV_8UC1);
+    Mat red   = imread(paths[R], CV_8UC1);
+    
+    vector<Mat> channels = {blue, green, red};
+    Mat color(blue.size(), CV_8UC3);
+    
+    merge(channels, color);
+    //imwrite("merged.png", color);
+    cvtColor(color, color, COLOR_BGR2RGB);
+    
+    long size = color.cols * color.rows * 3;
+    
+    if(image != NULL) free(image);
+    
+    image = new wxImage(color.cols, color.rows,(unsigned char*)malloc(size), false);
+    memcpy(image->GetData(), color.data, size);
+	
+    return image;
+}
+
+wxImage* ImageHandler::ComputeNDVI()
+{
+    /*
+        Normalized Difference Vegetation Index (NDVI) uses the NIR and red channels in its formula.
+        NDVI = (NIR - RED)/(NIR + RED)
+    */
+
+    Mat red   = imread(paths[R], CV_8UC1);
+    Mat nir   = imread(paths[NIR], CV_8UC1);        
+    
+    if (red.size() != nir.size())
+        return NULL;
+    
+    Mat ndvi = Mat::zeros(red.size(), CV_8UC3);
+    
+    long size = red.cols * red.rows;
+    for(int i = 0; i < size; i++)
+    {
+        float value = (nir.data[i] == red.data[i]) ? 0 : (float)(nir.data[i] - red.data[i])/(float)(nir.data[i] + red.data[i]);
+        // transform from [-1, 1] to [0, 255]
+        unsigned char color = (unsigned char)128 * value + 128; 
+        
+        ndvi.data[i * 3] = (unsigned char)(colors[color].B);
+        ndvi.data[i * 3 + 1] = (unsigned char)(colors[color].G);
+        ndvi.data[i * 3 + 2] = (unsigned char)(colors[color].R);
+    }
+    
+    imwrite("ndvi.png", ndvi);
+    cvtColor(ndvi, ndvi, COLOR_BGR2RGB); 
+      
+    size = size * 3;
+        
+    if(image != NULL) free(image);
+    
+    image = new wxImage(ndvi.cols, ndvi.rows,(unsigned char*)malloc(size), false);
+    memcpy(image->GetData(), ndvi.data, size);
+	
+    return image;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
   /*
     wxImage* GenerateImage(wxImage* red, wxImage* green, wxImage* blue)
@@ -404,7 +478,7 @@ wxImage* ImageHandler::GetImage()
     {
 
         FILE *fp;
-        fp = fopen("NDVI_DOS.pal", "r");
+        fp = fopen("resources/NDVI_DOS.pal", "r");
 
         if(fp == NULL)
         {
