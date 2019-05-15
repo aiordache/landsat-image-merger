@@ -1,6 +1,5 @@
 
 #include <wx/filedlg.h>
-#include <wx/clrpicker.h>
 #include <dirent.h>
 #include "xpm_icons.hpp"
 #include "gui.hpp"
@@ -32,6 +31,8 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
  EVT_RADIOBUTTON(RADIO_DEF_COL_PALETTE,    MainFrame::OnPaletteRadioStatusChange)
  EVT_RADIOBUTTON(RADIO_CUSTOM_COL_PALETTE, MainFrame::OnPaletteRadioStatusChange)
+ EVT_COLOURPICKER_CHANGED(COLOR_START, MainFrame::OnColorPaletteChange)
+ EVT_COLOURPICKER_CHANGED(COLOR_END, MainFrame::OnColorPaletteChange)
 END_EVENT_TABLE()
 
 
@@ -62,6 +63,9 @@ MainFrame::~MainFrame()
 
 void MainFrame::CreateGUIControls(const wxSize& mf_size)
 {
+    //object manipulating image operations
+    imghandler = new ImageHandler();
+    
     cout<<mf_size.GetWidth()<<"  -- "<<mf_size.GetHeight()<<endl;
   
     menubar = new wxToolBar(this, wxID_ANY);
@@ -166,6 +170,9 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
     
     palettebar    = new wxToolBar(this, wxID_ANY);
+    
+    palettebar->AddStretchableSpace();
+    palettebar->AddControl(new wxStaticBitmap(palettebar, COLOR_PALETTE, *(imghandler->GetColorPaletteImage())));
     palettebar->AddStretchableSpace();
     palettebar->AddControl(new wxRadioButton(palettebar, RADIO_DEF_COL_PALETTE, _T("Default Color Scheme")));
     palettebar->AddStretchableSpace();
@@ -173,6 +180,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_START));
     palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_END));
     palettebar->AddStretchableSpace();
+    
     palettebar->Realize();
     
     palettebar->FindControl(COLOR_START)->Disable();
@@ -196,8 +204,6 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
     SetSizer(mainsizer);
     
-    //object manipulating image operations
-    imghandler = new ImageHandler();
     
 }
 
@@ -302,30 +308,6 @@ void MainFrame::OnExit( wxCommandEvent& event )
   
 }
 
-void MainFrame::OnGenerateImage(wxCommandEvent& event)
-{
-   SetTitle("Generating RGB image ....");
-   wxImage* img = NULL;
-   if (((wxRadioButton*)operationsbar->FindControl(RADIO_RGB))->GetValue())
-        img = imghandler->GetRGBImage();
-   else
-   if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDVI))->GetValue())
-        img = imghandler->ComputeNDVI();
-   else
-   if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDWI))->GetValue())
-        img = imghandler->ComputeNDWI();
-        
-   
-   if (img != NULL)
-    {
-        ic->SetImage(img);
-        SetTitle("");
-    }
-    else
-        SetTitle("Failed to generate image.");
-}
-
-
 void MainFrame::OnRadioStatusChange(wxCommandEvent& event)
 {
     SetTitle("");
@@ -350,3 +332,56 @@ void MainFrame::OnPaletteRadioStatusChange(wxCommandEvent& event)
         palettebar->FindControl(COLOR_END)->Enable();
     }
 }
+
+void MainFrame::OnColorPaletteChange(wxColourPickerEvent& event)
+{
+    unsigned int color1 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
+       unsigned int color2 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
+    
+    // load custom color scheme 
+    imghandler->LoadColorPalette(color1, color2); 
+    
+    wxStaticBitmap* bitmap = (wxStaticBitmap*)palettebar->FindControl(COLOR_PALETTE);
+    
+    bitmap->SetBitmap(*(imghandler->GetColorPaletteImage()));
+}
+
+
+void MainFrame::OnGenerateImage(wxCommandEvent& event)
+{
+   SetTitle("Generating RGB image ....");
+   
+   if (((wxRadioButton*)palettebar->FindControl(RADIO_DEF_COL_PALETTE))->GetValue())
+        imghandler->ResetColorPalette();
+   else
+   {
+        unsigned int color1 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
+       unsigned int color2 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
+        
+        // load custom color scheme 
+        imghandler->LoadColorPalette(color1, color2);   
+    }
+   
+   
+   wxImage* img = NULL;
+   if (((wxRadioButton*)operationsbar->FindControl(RADIO_RGB))->GetValue())
+        img = imghandler->GetRGBImage();
+   else
+   if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDVI))->GetValue())
+        img = imghandler->ComputeNDVI();
+   else
+   if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDWI))->GetValue())
+        img = imghandler->ComputeNDWI();
+        
+   
+   
+   
+   if (img != NULL)
+    {
+        ic->SetImage(img);
+        SetTitle("");
+    }
+    else
+        SetTitle("Failed to generate image.");
+}
+

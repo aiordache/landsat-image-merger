@@ -6,9 +6,9 @@
 #else
 	#include <wx/wxprec.h>
 #endif
-
 #include <wx/textctrl.h>
 #include <wx/button.h>
+#include <wx/clrpicker.h>
 #include "image_container.hpp"
 #include "image_handler.hpp"
  
@@ -29,7 +29,8 @@ enum
     COLOR_START,
     COLOR_END,
     RADIO_DEF_COL_PALETTE,
-    RADIO_CUSTOM_COL_PALETTE
+    RADIO_CUSTOM_COL_PALETTE,
+    COLOR_PALETTE
   };
  
  
@@ -43,6 +44,7 @@ class MainFrame : public wxFrame
         wxToolBar       *operationsbar;
         wxToolBar       *palettebar;
         wxTextCtrl      *formula;
+        
         ImageContainer  *ic;
         
         void OnLoadFromDir(wxCommandEvent& event);
@@ -56,6 +58,7 @@ class MainFrame : public wxFrame
 	    void OnGenerateImage(wxCommandEvent& event);
         void OnRadioStatusChange(wxCommandEvent& event);
         void OnPaletteRadioStatusChange(wxCommandEvent& event);
+        void OnColorPaletteChange(wxColourPickerEvent& event);
         void CreateGUIControls(const wxSize& mf_size);
 
 

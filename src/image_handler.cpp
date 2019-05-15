@@ -14,6 +14,36 @@ ImageHandler::ImageHandler()
 {
     //the current processed image
     image = NULL;
+    
+    //load default color scheme from file
+    FILE *fp;
+    fp = fopen("resources/colors.pal", "r");
+
+    if(fp == NULL)
+    {
+        printf("file not found!\n");
+        exit(0);
+    }
+    else
+    {
+        int i = 0, j = 0;
+        int index = 0, r = 0, g = 0, b=0;
+        while(!feof(fp))
+        {
+            fscanf(fp, "%d", &index);
+            fscanf(fp, "%d", &r);
+            fscanf(fp, "%d", &g);
+            fscanf(fp, "%d", &b);
+            defcolors[index].B = b;
+            defcolors[index].G = g;
+            defcolors[index].R = r;
+        }
+        fclose(fp) ;
+    }
+    
+    colors = defcolors;
+    
+    cout<<"Pointer address: "<<colors<<" is default "<<defcolors<<endl;
 }
 
 void ImageHandler::AddImagePath(string path)
@@ -41,32 +71,71 @@ void ImageHandler::ResetImagePaths()
 
 }
 
-void ImageHandler::LoadPalette(const char* palette)
+void ImageHandler::ResetColorPalette()
 {
-    FILE *fp;
-    fp = fopen(palette, "r");
+    if (colors != NULL && colors != defcolors)
+        free(colors);
+    colors = defcolors;
+}
+wxImage* ImageHandler::GetColorPaletteImage()
+{
+    if (palette != NULL)
+        return palette;
+    
+    UpdateColorPaletteImage();
+    return palette;
+}
 
-    if(fp == NULL)
+void ImageHandler::UpdateColorPaletteImage()
+{
+    if (palette != NULL)
+        delete palette;
+    
+    int width = 256;
+    int height = 20;
+    
+    palette = new wxImage(width, height,(unsigned char*)malloc(width * height *3), false);
+
+    
+    for(int i = 0; i < width * height; i++)
     {
-        printf("file not found!\n");
-        exit(0);
+        palette->GetData()[i * 3]     = (unsigned char)colors[i % width].R;
+        palette->GetData()[i * 3 + 1] = (unsigned char)colors[i % width].G;
+        palette->GetData()[i * 3 + 2] = (unsigned char)colors[i % width].B;
     }
-    else
-    {
-        int i = 0, j = 0;
-        int index = 0, r = 0, g = 0, b=0;
-        while(!feof(fp))
-        {
-            fscanf(fp, "%d", &index);
-            fscanf(fp, "%d", &r);
-            fscanf(fp, "%d", &g);
-            fscanf(fp, "%d", &b);
-            colors[index].B = b;
-            colors[index].G = g;
-            colors[index].R = r;
-        }
-        fclose(fp) ;
+    
+}
+
+void ImageHandler::LoadColorPalette(unsigned int color1, unsigned int color2)
+{
+    ResetColorPalette();
+    
+    
+    vector<unsigned int> rgb1 = {(color1 & 0x00ff0000) >> 16, (color1 & 0x0000ff00) >> 8, (color1 & 0x000000ff)};
+    vector<unsigned int> rgb2 = {(color2 & 0x00ff0000) >> 16, (color2 & 0x0000ff00) >> 8, (color2 & 0x000000ff)};
+    
+    if (colors != defcolors)
+        delete colors;
+    colors = new Color[256];
+    cout<<"Pointer address: "<<colors<<" default: "<<defcolors<<endl;
+    
+    for(int i = 0; i < 256; i++)
+    {   
+        
+        float r = interpolate((float)rgb1[0], (float)rgb2[0], i);
+        float g = interpolate((float)rgb1[1], (float)rgb2[1], i);
+        float b = interpolate((float)rgb1[2], (float)rgb2[2], i);
+        
+        cout <<r<<"  "<<g<<"  "<<b<<endl;  
+        
+        colors[i].R = (unsigned char) r;
+        colors[i].G = (unsigned char) g;
+        colors[i].B = (unsigned char) b;
+        
+        cout << i<<" "<<(int)colors[i].R<< " "<<(int)colors[i].G<<" "<<(int)colors[i].R<<endl;
     }
+    
+    UpdateColorPaletteImage();
 }
 
 
@@ -150,7 +219,6 @@ wxImage* ImageHandler::ComputeNDVI()
         NDVI = (NIR - RED)/(NIR + RED)
     */
     
-    LoadPalette("resources/colors.pal");
     return GenerateCommonFormulaIndexImage(paths[NIR], paths[R]);
 }
 
@@ -164,7 +232,6 @@ wxImage* ImageHandler::ComputeNDWI()
 
     NDWI = (NIR - SWIR)/(NIR + SWIR)
     */
-    LoadPalette("resources/colors.pal");
     return GenerateCommonFormulaIndexImage(paths[NIR], paths[SWIR1]);
 }
 

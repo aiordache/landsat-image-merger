@@ -1,9 +1,14 @@
 #include <wx/image.h>
-#include "utils.hpp"
 
 //number of Landsat bands to work with
+
+#define interpolate(x,y,i) (((i)/255.0f) * (x) + ((i)/255.0f) * (y) + 0.5f) 
 #define N 8
 
+typedef struct
+{
+  unsigned char R, G, B;
+} Color;
 
 
 
@@ -34,11 +39,11 @@ class ImageHandler
         int             width;
         int             height;
 
-        Color           colors[256];
-        
-        
-        void            LoadPalette(const char* palette);     
+        Color           defcolors[256];
+        Color           *colors = NULL;
+        wxImage         *palette = NULL;   
         wxImage*        GenerateCommonFormulaIndexImage(std::string band1, std::string band2);
+        void            UpdateColorPaletteImage();
     public:
         ImageHandler();
         
@@ -47,8 +52,10 @@ class ImageHandler
         void            AddImagePath(std::string path);
         void            SetImagePath(std::string path, int index);
         void            ResetImagePaths();
+        void            ResetColorPalette();
+        void            LoadColorPalette(unsigned int color1, unsigned int color2); 
         wxImage*        GetImage();
-        
+        wxImage*        GetColorPaletteImage();
         
         wxImage*        GetRGBImage();
         wxImage*        ComputeNDVI();
