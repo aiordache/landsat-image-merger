@@ -159,7 +159,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_RGB, _T("RGB")));
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_NDVI, _T("NDVI")));
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_NDWI, _T("NDWI")));
-    operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_FORMULA, _T("Pixel Formula")));
+    operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_FORMULA, _T("Band Combination")));
     operationsbar->AddControl(formula);
     
     operationsbar->AddStretchableSpace();
@@ -172,7 +172,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     palettebar    = new wxToolBar(this, wxID_ANY);
     
     palettebar->AddStretchableSpace();
-    palettebar->AddControl(new wxStaticBitmap(palettebar, COLOR_PALETTE, *(imghandler->GetColorPaletteImage())));
+    palettebar->AddControl(new wxStaticBitmap(palettebar, GRADIENT_BITMAP, *(imghandler->GetColorPaletteImage())));
     palettebar->AddStretchableSpace();
     palettebar->AddControl(new wxRadioButton(palettebar, RADIO_DEF_COL_PALETTE, _T("Default Color Scheme")));
     palettebar->AddStretchableSpace();
@@ -180,7 +180,12 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_START));
     palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_END));
     palettebar->AddStretchableSpace();
+  
+    colorpalette = new ColorPalette(palettebar, COLOR_PALETTE, "Color Palette");
     
+    colorpalette->SetColorCount(3);
+    palettebar->AddControl(colorpalette); 
+    palettebar->AddStretchableSpace();
     palettebar->Realize();
     
     palettebar->FindControl(COLOR_START)->Disable();
@@ -204,7 +209,6 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
     SetSizer(mainsizer);
     
-    
 }
 
 
@@ -216,11 +220,10 @@ void MainFrame::UpdateColorPalette()
         unsigned int color1 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
            unsigned int color2 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_END))->GetColour()).GetRGB();
         
-        cout<<" Paleta: "<<color1<<" TO "<< color2; 
         // load custom color scheme 
         imghandler->LoadColorPalette(color1, color2); 
     }
-    wxStaticBitmap* bitmap = (wxStaticBitmap*)palettebar->FindControl(COLOR_PALETTE);
+    wxStaticBitmap* bitmap = (wxStaticBitmap*)palettebar->FindControl(GRADIENT_BITMAP);
     
     bitmap->SetBitmap(*(imghandler->GetColorPaletteImage()));
     

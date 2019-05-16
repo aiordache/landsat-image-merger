@@ -11,7 +11,7 @@
 #include <wx/clrpicker.h>
 #include "image_container.hpp"
 #include "image_handler.hpp"
- 
+#include "color_palette.hpp"
 
 enum
   {
@@ -30,6 +30,7 @@ enum
     COLOR_END,
     RADIO_DEF_COL_PALETTE,
     RADIO_CUSTOM_COL_PALETTE,
+    GRADIENT_BITMAP,
     COLOR_PALETTE
   };
  
@@ -44,7 +45,7 @@ class MainFrame : public wxFrame
         wxToolBar       *operationsbar;
         wxToolBar       *palettebar;
         wxTextCtrl      *formula;
-        
+        ColorPalette    *colorpalette;    
         ImageContainer  *ic;
         
         

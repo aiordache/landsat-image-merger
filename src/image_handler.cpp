@@ -48,7 +48,7 @@ ImageHandler::ImageHandler()
 
 void ImageHandler::AddImagePath(string path)
 {
-    cout<<"Add path : "<<path<<endl;
+    //cout<<"Add path : "<<path<<endl;
     int i = 0;
     while(paths[i] != "" && i < N)
         i++;
@@ -93,7 +93,7 @@ void ImageHandler::UpdateColorPaletteImage()
         delete palette;
     
     int width = 256;
-    int height = 10;
+    int height = 20;
     
     palette = new wxImage(width, height,(unsigned char*)malloc(width * height *3), false);
 
