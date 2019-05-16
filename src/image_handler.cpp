@@ -58,7 +58,7 @@ void ImageHandler::AddImagePath(string path)
 
 void ImageHandler::SetImagePath(string path, int index)
 {
-    cout<<" Set image path: "<<path<<" at "<<index<<endl; 
+    //cout<<" Set image path: "<<path<<" at "<<index<<endl; 
     paths[index] = path;
 }
 
@@ -74,8 +74,9 @@ void ImageHandler::ResetImagePaths()
 void ImageHandler::ResetColorPalette()
 {
     if (colors != NULL && colors != defcolors)
-        free(colors);
+        delete colors;
     colors = defcolors;
+    UpdateColorPaletteImage();
 }
 wxImage* ImageHandler::GetColorPaletteImage()
 {
@@ -92,11 +93,10 @@ void ImageHandler::UpdateColorPaletteImage()
         delete palette;
     
     int width = 256;
-    int height = 20;
+    int height = 10;
     
     palette = new wxImage(width, height,(unsigned char*)malloc(width * height *3), false);
 
-    
     for(int i = 0; i < width * height; i++)
     {
         palette->GetData()[i * 3]     = (unsigned char)colors[i % width].R;
@@ -111,28 +111,27 @@ void ImageHandler::LoadColorPalette(unsigned int color1, unsigned int color2)
     ResetColorPalette();
     
     
-    vector<unsigned int> rgb1 = {(color1 & 0x00ff0000) >> 16, (color1 & 0x0000ff00) >> 8, (color1 & 0x000000ff)};
-    vector<unsigned int> rgb2 = {(color2 & 0x00ff0000) >> 16, (color2 & 0x0000ff00) >> 8, (color2 & 0x000000ff)};
+    vector<unsigned int> rgb1 = { (color1 & 0x000000ff), (color1 & 0x0000ff00) >> 8, (color1 & 0x00ff0000) >> 16};
+    vector<unsigned int> rgb2 = {(color2 & 0x000000ff), (color2 & 0x0000ff00) >> 8, (color2 & 0x00ff0000) >> 16};
     
     if (colors != defcolors)
         delete colors;
+        
     colors = new Color[256];
-    cout<<"Pointer address: "<<colors<<" default: "<<defcolors<<endl;
     
     for(int i = 0; i < 256; i++)
     {   
-        
         float r = interpolate((float)rgb1[0], (float)rgb2[0], i);
         float g = interpolate((float)rgb1[1], (float)rgb2[1], i);
         float b = interpolate((float)rgb1[2], (float)rgb2[2], i);
         
-        cout <<r<<"  "<<g<<"  "<<b<<endl;  
+        //cout <<r<<endl;//<<"  "<<g<<"  "<<b<<endl;  
         
         colors[i].R = (unsigned char) r;
         colors[i].G = (unsigned char) g;
         colors[i].B = (unsigned char) b;
         
-        cout << i<<" "<<(int)colors[i].R<< " "<<(int)colors[i].G<<" "<<(int)colors[i].R<<endl;
+        //cout <<" "<<(int)colors[i].R<< " "<<(int)colors[i].G<<" "<<(int)colors[i].R<<endl;
     }
     
     UpdateColorPaletteImage();

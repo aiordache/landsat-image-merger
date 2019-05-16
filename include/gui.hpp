@@ -47,6 +47,10 @@ class MainFrame : public wxFrame
         
         ImageContainer  *ic;
         
+        
+        void UpdateColorPalette();
+        
+        // EVENT HANDLERS
         void OnLoadFromDir(wxCommandEvent& event);
         void OnLoadImage(wxCommandEvent& event);
         

@@ -207,6 +207,37 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
 }
 
+
+void MainFrame::UpdateColorPalette()
+{
+    SetTitle("Updating Palette");
+    if (((wxRadioButton*)palettebar->FindControl(RADIO_CUSTOM_COL_PALETTE))->GetValue())
+    {
+        unsigned int color1 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
+           unsigned int color2 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_END))->GetColour()).GetRGB();
+        
+        cout<<" Paleta: "<<color1<<" TO "<< color2; 
+        // load custom color scheme 
+        imghandler->LoadColorPalette(color1, color2); 
+    }
+    wxStaticBitmap* bitmap = (wxStaticBitmap*)palettebar->FindControl(COLOR_PALETTE);
+    
+    bitmap->SetBitmap(*(imghandler->GetColorPaletteImage()));
+    
+    SetTitle("Color Palette Updated.");
+}
+
+
+
+
+
+
+
+
+
+
+
+// EVENT HANDLERS
 void MainFrame::OnLoadFromDir( wxCommandEvent& event )
 {
     SetTitle("");
@@ -325,43 +356,25 @@ void MainFrame::OnPaletteRadioStatusChange(wxCommandEvent& event)
     {
         palettebar->FindControl(COLOR_START)->Disable();
         palettebar->FindControl(COLOR_END)->Disable();
+        imghandler->ResetColorPalette();
     }
     else
     {
         palettebar->FindControl(COLOR_START)->Enable();
         palettebar->FindControl(COLOR_END)->Enable();
     }
+    UpdateColorPalette();
 }
 
 void MainFrame::OnColorPaletteChange(wxColourPickerEvent& event)
 {
-    unsigned int color1 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
-       unsigned int color2 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
-    
-    // load custom color scheme 
-    imghandler->LoadColorPalette(color1, color2); 
-    
-    wxStaticBitmap* bitmap = (wxStaticBitmap*)palettebar->FindControl(COLOR_PALETTE);
-    
-    bitmap->SetBitmap(*(imghandler->GetColorPaletteImage()));
+    UpdateColorPalette();
 }
 
 
 void MainFrame::OnGenerateImage(wxCommandEvent& event)
 {
    SetTitle("Generating RGB image ....");
-   
-   if (((wxRadioButton*)palettebar->FindControl(RADIO_DEF_COL_PALETTE))->GetValue())
-        imghandler->ResetColorPalette();
-   else
-   {
-        unsigned int color1 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
-       unsigned int color2 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
-        
-        // load custom color scheme 
-        imghandler->LoadColorPalette(color1, color2);   
-    }
-   
    
    wxImage* img = NULL;
    if (((wxRadioButton*)operationsbar->FindControl(RADIO_RGB))->GetValue())

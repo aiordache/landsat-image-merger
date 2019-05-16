@@ -1,8 +1,9 @@
 #include <wx/image.h>
 
-//number of Landsat bands to work with
+//#define interpolate(x,y,i) (((i)/255.0f) * (x) + ((i)/255.0f) * (y) + 0.5f) 
 
-#define interpolate(x,y,i) (((i)/255.0f) * (x) + ((i)/255.0f) * (y) + 0.5f) 
+#define interpolate(x,y,i) ((1.0f - ((i)/255.0f)) * (x) + ((i)/255.0f) * (y) + 0.5f) 
+
 #define N 8
 
 typedef struct
