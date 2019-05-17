@@ -8,11 +8,16 @@
 #include "wx/control.h"
 #include <vector>
 
+
 class ColorPalette: public wxControl
 {
     private:
         std::vector<unsigned int>   pickedcolors = {};
         wxBitmap                    *bitmap;
+        
+        int                         focus = -1;
+        int                         pwidth = 0;
+        int                         padding = 0;
         
         void    CreatePaletteBitmap();
     public:
@@ -22,8 +27,10 @@ class ColorPalette: public wxControl
 	    ColorPalette (wxWindow* parent, wxWindowID id, const wxString& txt);
 	    void    SetColorCount(int num);
 	    void    SetColor(int index, unsigned int color);
-	    void OnPaint(wxPaintEvent& event);
-
+	    void    OnPaint(wxPaintEvent& event);
+	    void    OnMouseClick(wxMouseEvent& event);
+        void    OnMouseHover(wxMouseEvent& event);
+        void    OnMouseLeave(wxMouseEvent& event);
 	    DECLARE_EVENT_TABLE();
 	   
 };

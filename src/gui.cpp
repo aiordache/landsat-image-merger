@@ -193,7 +193,6 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     colorpalette->Disable();
     palettebar->AddControl(colorpalette); 
     
-    
     wxArrayString choices;
     choices.Add(wxT("2"));
     choices.Add(wxT("3"));
