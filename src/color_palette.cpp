@@ -1,4 +1,7 @@
+#include <wx/brush.h>
+#include <wx/graphics.h>
 #include "color_palette.hpp"
+
 using namespace std;
 
 IMPLEMENT_DYNAMIC_CLASS(ColorPalette, wxControl);
@@ -11,22 +14,8 @@ END_EVENT_TABLE()
 ColorPalette::ColorPalette (wxWindow* parent, wxWindowID id, const wxString& txt) : wxControl (parent, id) 
 { 
     SetLabel(txt); 
-    SetSize(200,30);
+    SetSize(230,30);
     SetWindowStyle(0);
-}
-
-wxSize ColorPalette::DoGetBestSize() const
-{
-	// Do not return any arbitrary default value...
-	wxASSERT_MSG( m_widget, wxT("ColorPalette::DoGetBestSize called before creation") );
-
-	wxClientDC dc (const_cast<ColorPalette*> (this));
-
-	wxCoord w;
-	wxCoord h;
-	dc.GetTextExtent( "test", &w, &h );
-
-	return wxSize( w, h );
 }
 
 void ColorPalette::OnPaint(wxPaintEvent& WXUNUSED(event))
@@ -36,18 +25,21 @@ void ColorPalette::OnPaint(wxPaintEvent& WXUNUSED(event))
 
 	GetClientSize( &width, &height );
 
-	dc.SetTextForeground (GetForegroundColour ());
-	dc.SetTextBackground (GetBackgroundColour ());
-
 	if (bitmap != NULL)
 	    dc.DrawBitmap(*bitmap, 0, 0);
+	    
+	if (!IsEnabled())
+	{ 
+	    wxGraphicsContext *gc = wxGraphicsContext::Create( dc );
+        if (gc)
+        {
+            gc->SetBrush(wxBrush(wxColour(250,250,250,128)));
+            gc->DrawRectangle(0,0,width, height);
+            delete gc;
+        }
+	}
 }
 
-void ColorPalette::SetLabel( const wxString& label )
-{
-	wxControl::SetLabel( label );
-	Refresh ();
-}
 
 void ColorPalette::CreatePaletteBitmap()
 {
@@ -62,12 +54,16 @@ void ColorPalette::CreatePaletteBitmap()
         int x = i % width;
         int y = i / width;
         int p = x % square;
-        
+        int col_index = x/square;
         if (x >1 && x < width - 6 && y >1 && y < height - 6 && p > 1 && p < square - 1)
         {
-            img.GetData()[i* 3]     = 0;
-            img.GetData()[i*3 + 1] = 0;
-            img.GetData()[i*3 + 2] = 0;
+            unsigned char r = pickedcolors[col_index] & 0x000000ff;
+            unsigned char g = (pickedcolors[col_index]& 0x0000ff00) >> 8;
+            unsigned char b = (pickedcolors[col_index] & 0x00ff0000) >> 16;
+            
+            img.GetData()[i* 3]    = r;
+            img.GetData()[i*3 + 1] = g;
+            img.GetData()[i*3 + 2] = b;
         }
         else
         {
@@ -82,20 +78,28 @@ void ColorPalette::CreatePaletteBitmap()
 
 void ColorPalette::SetColorCount(int num)
 {
+    int i = pickedcolors.size();
     if (pickedcolors.size() < num)
     {
-        int i = pickedcolors.size();
         while(i < num)
         {
             pickedcolors.push_back(0);
             i++;
         }
-        CreatePaletteBitmap();
-        Refresh();
     }
+    else
+    {
+        while(i > num)
+        {
+            pickedcolors.pop_back();
+            i--;
+        }
+     }
+     CreatePaletteBitmap();
+        Refresh();
 }
 
-void ColorPalette::SetColot(int index, unsigned int color)
+void ColorPalette::SetColor(int index, unsigned int color)
 {
 
 

@@ -31,8 +31,11 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
  EVT_RADIOBUTTON(RADIO_DEF_COL_PALETTE,    MainFrame::OnPaletteRadioStatusChange)
  EVT_RADIOBUTTON(RADIO_CUSTOM_COL_PALETTE, MainFrame::OnPaletteRadioStatusChange)
- EVT_COLOURPICKER_CHANGED(COLOR_START, MainFrame::OnColorPaletteChange)
- EVT_COLOURPICKER_CHANGED(COLOR_END, MainFrame::OnColorPaletteChange)
+ //EVT_COLOURPICKER_CHANGED(COLOR_START, MainFrame::OnColorPaletteChange)
+ //EVT_COLOURPICKER_CHANGED(COLOR_END, MainFrame::OnColorPaletteChange)
+ 
+ 
+ EVT_COMBOBOX(COLOR_COUNTER, MainFrame::OnColorPaletteChange)
 END_EVENT_TABLE()
 
 
@@ -177,20 +180,37 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     palettebar->AddControl(new wxRadioButton(palettebar, RADIO_DEF_COL_PALETTE, _T("Default Color Scheme")));
     palettebar->AddStretchableSpace();
     palettebar->AddControl(new wxRadioButton(palettebar, RADIO_CUSTOM_COL_PALETTE, _T("Custom Color Scheme")));
-    palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_START));
-    palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_END));
+    //palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_START));
+    //palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_END));
     palettebar->AddStretchableSpace();
+    
+    //palettebar->FindControl(COLOR_START)->Disable();
+    //palettebar->FindControl(COLOR_END)->Disable();
+
   
     colorpalette = new ColorPalette(palettebar, COLOR_PALETTE, "Color Palette");
-    
     colorpalette->SetColorCount(3);
+    colorpalette->Disable();
     palettebar->AddControl(colorpalette); 
+    
+    
+    wxArrayString choices;
+    choices.Add(wxT("2"));
+    choices.Add(wxT("3"));
+    choices.Add(wxT("4"));
+    choices.Add(wxT("5"));
+    choices.Add(wxT("6"));
+    choices.Add(wxT("7"));
+    choices.Add(wxT("8"));
+    choices.Add(wxT("9"));
+    choices.Add(wxT("10"));
+    wxComboBox *cb = new wxComboBox(palettebar, COLOR_COUNTER, _T("3"), wxDefaultPosition, wxSize(60,20),choices, wxCB_READONLY);
+    cb->Disable();
+    palettebar->AddControl(cb);
+    
     palettebar->AddStretchableSpace();
     palettebar->Realize();
     
-    palettebar->FindControl(COLOR_START)->Disable();
-    palettebar->FindControl(COLOR_END)->Disable();
-
     wxPanel* displaypanel = new wxPanel(this, wxID_ANY);
     ic = new ImageContainer(displaypanel, wxID_ANY);
     ic->SetImage(new wxImage("resources/image.tif"));
@@ -215,6 +235,12 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 void MainFrame::UpdateColorPalette()
 {
     SetTitle("Updating Palette");
+    
+    int num = wxAtoi(((wxComboBox*)palettebar->FindControl(COLOR_COUNTER))->GetStringSelection());
+    
+    colorpalette->SetColorCount( num);
+    //remove this 
+    return;
     if (((wxRadioButton*)palettebar->FindControl(RADIO_CUSTOM_COL_PALETTE))->GetValue())
     {
         unsigned int color1 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
@@ -357,19 +383,23 @@ void MainFrame::OnPaletteRadioStatusChange(wxCommandEvent& event)
     SetTitle("");
     if (((wxRadioButton*)palettebar->FindControl(RADIO_DEF_COL_PALETTE))->GetValue())
     {
-        palettebar->FindControl(COLOR_START)->Disable();
-        palettebar->FindControl(COLOR_END)->Disable();
+        //palettebar->FindControl(COLOR_START)->Disable();
+        //palettebar->FindControl(COLOR_END)->Disable();
+        colorpalette->Disable();
+        ((wxComboBox*)palettebar->FindControl(COLOR_COUNTER))->Disable();
         imghandler->ResetColorPalette();
     }
     else
     {
-        palettebar->FindControl(COLOR_START)->Enable();
-        palettebar->FindControl(COLOR_END)->Enable();
+        //palettebar->FindControl(COLOR_START)->Enable();
+        //palettebar->FindControl(COLOR_END)->Enable();
+        colorpalette->Enable();
+        ((wxComboBox*)palettebar->FindControl(COLOR_COUNTER))->Enable();
     }
     UpdateColorPalette();
 }
 
-void MainFrame::OnColorPaletteChange(wxColourPickerEvent& event)
+void MainFrame::OnColorPaletteChange(wxCommandEvent& event)
 {
     UpdateColorPalette();
 }

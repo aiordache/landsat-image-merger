@@ -21,10 +21,8 @@ class ColorPalette: public wxControl
 	    ColorPalette (){};
 	    ColorPalette (wxWindow* parent, wxWindowID id, const wxString& txt);
 	    void    SetColorCount(int num);
-	    void    SetColot(int index, unsigned int color);
-	    wxSize DoGetBestSize() const;
+	    void    SetColor(int index, unsigned int color);
 	    void OnPaint(wxPaintEvent& event);
-	    void SetLabel( const wxString& label );
 
 	    DECLARE_EVENT_TABLE();
 	   

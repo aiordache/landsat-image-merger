@@ -31,6 +31,7 @@ enum
     RADIO_DEF_COL_PALETTE,
     RADIO_CUSTOM_COL_PALETTE,
     GRADIENT_BITMAP,
+    COLOR_COUNTER,
     COLOR_PALETTE
   };
  
@@ -63,7 +64,7 @@ class MainFrame : public wxFrame
 	    void OnGenerateImage(wxCommandEvent& event);
         void OnRadioStatusChange(wxCommandEvent& event);
         void OnPaletteRadioStatusChange(wxCommandEvent& event);
-        void OnColorPaletteChange(wxColourPickerEvent& event);
+        void OnColorPaletteChange(wxCommandEvent& event);
         void CreateGUIControls(const wxSize& mf_size);
 
 
