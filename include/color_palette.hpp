@@ -5,9 +5,11 @@
 #else
 	#include <wx/wxprec.h>
 #endif
-#include "wx/control.h"
+#include <wx/control.h>
+//#include "event.hpp"
 #include <vector>
 
+wxDECLARE_EVENT(COLOR_SELECTED, wxCommandEvent);
 
 class ColorPalette: public wxControl
 {
@@ -25,8 +27,9 @@ class ColorPalette: public wxControl
 
 	    ColorPalette (){};
 	    ColorPalette (wxWindow* parent, wxWindowID id, const wxString& txt);
+	    
+	    std::vector<unsigned int>    GetColorList();
 	    void    SetColorCount(int num);
-	    void    SetColor(int index, unsigned int color);
 	    void    OnPaint(wxPaintEvent& event);
 	    void    OnMouseClick(wxMouseEvent& event);
         void    OnMouseHover(wxMouseEvent& event);

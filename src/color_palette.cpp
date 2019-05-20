@@ -1,12 +1,14 @@
 #include <wx/brush.h>
 #include <wx/graphics.h>
 #include <wx/colordlg.h>
+
 #include "color_palette.hpp"
 
 using namespace std;
 
-IMPLEMENT_DYNAMIC_CLASS(ColorPalette, wxControl);
+wxDEFINE_EVENT(COLOR_SELECTED, wxCommandEvent);
 
+IMPLEMENT_DYNAMIC_CLASS(ColorPalette, wxControl);
 
 BEGIN_EVENT_TABLE(ColorPalette, wxControl)
 	EVT_PAINT(ColorPalette::OnPaint)
@@ -14,6 +16,7 @@ BEGIN_EVENT_TABLE(ColorPalette, wxControl)
 	EVT_MOTION(ColorPalette::OnMouseHover)
 	EVT_LEAVE_WINDOW(ColorPalette::OnMouseLeave)
 END_EVENT_TABLE()
+
 
 ColorPalette::ColorPalette (wxWindow* parent, wxWindowID id, const wxString& txt) : wxControl (parent, id) 
 { 
@@ -84,7 +87,6 @@ void ColorPalette::OnMouseClick(wxMouseEvent& event)
     if (dlg.ShowModal() == wxID_OK)
     {
         wxColour c = dlg.GetColourData().GetColour();
-        cout<<"Colour data: "<<c.GetAsString()<<endl;
         
         int index = (mouseX % GetSize().GetWidth())/pwidth;
         pickedcolors[index] = (unsigned int)c.GetRGB();
@@ -137,6 +139,12 @@ void ColorPalette::CreatePaletteBitmap()
     }
     
     bitmap = new wxBitmap(img);
+    
+    // fire event
+    wxCommandEvent event(COLOR_SELECTED, GetId());
+    event.SetEventObject(this);
+    ProcessWindowEvent(event);
+    cout<<" EVENT FIRED ====> "<<endl;  
 }
 
 void ColorPalette::SetColorCount(int num)
@@ -161,13 +169,10 @@ void ColorPalette::SetColorCount(int num)
      CreatePaletteBitmap();
      Refresh();
 }
-
-void ColorPalette::SetColor(int index, unsigned int color)
+vector<unsigned int>    ColorPalette::GetColorList()
 {
-
-
+    return pickedcolors;
 }
-
 
 	    
 

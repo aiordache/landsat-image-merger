@@ -31,11 +31,10 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
 
  EVT_RADIOBUTTON(RADIO_DEF_COL_PALETTE,    MainFrame::OnPaletteRadioStatusChange)
  EVT_RADIOBUTTON(RADIO_CUSTOM_COL_PALETTE, MainFrame::OnPaletteRadioStatusChange)
- //EVT_COLOURPICKER_CHANGED(COLOR_START, MainFrame::OnColorPaletteChange)
- //EVT_COLOURPICKER_CHANGED(COLOR_END, MainFrame::OnColorPaletteChange)
  
+ EVT_COMBOBOX(COLOR_COUNTER, MainFrame::OnColorCounterChange)
  
- EVT_COMBOBOX(COLOR_COUNTER, MainFrame::OnColorPaletteChange)
+ EVT_COMMAND (COLOR_PALETTE, COLOR_SELECTED, MainFrame::OnColorPaletteChange)
 END_EVENT_TABLE()
 
 
@@ -79,8 +78,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     menubar->AddStretchableSpace();
     
     menubar->AddTool(IMAGE_DIR, wxT("Band dir"), wxBitmap(folder_icon));
-    menubar->SetToolShortHelp(IMAGE_DIR, "Load images from directory");		
-    //menubar->AddTool(MENU_Open, wxT("Band 1"), wxBitmap(folder_icon));
+    menubar->SetToolShortHelp(IMAGE_DIR, "Load images from directory");
     menubar->AddSeparator();
     
 
@@ -230,14 +228,9 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
 }
 
-
 void MainFrame::UpdateColorPalette()
 {
-    SetTitle("Updating Palette");
-    
-    int num = wxAtoi(((wxComboBox*)palettebar->FindControl(COLOR_COUNTER))->GetStringSelection());
-    
-    colorpalette->SetColorCount( num);
+     SetTitle("Updating Palette");
     //remove this 
     return;
     if (((wxRadioButton*)palettebar->FindControl(RADIO_CUSTOM_COL_PALETTE))->GetValue())
@@ -254,14 +247,6 @@ void MainFrame::UpdateColorPalette()
     
     SetTitle("Color Palette Updated.");
 }
-
-
-
-
-
-
-
-
 
 
 
@@ -400,9 +385,19 @@ void MainFrame::OnPaletteRadioStatusChange(wxCommandEvent& event)
 
 void MainFrame::OnColorPaletteChange(wxCommandEvent& event)
 {
+    cout <<"Update the palette..................."<<endl;
     UpdateColorPalette();
 }
-
+void MainFrame::OnColorCounterChange(wxCommandEvent& event)
+{
+    cout <<"Update the palette..."<<endl;   
+    wxComboBox*cb = (wxComboBox*)palettebar->FindControl(COLOR_COUNTER);
+        
+    int num = wxAtoi(cb->GetStringSelection());
+    
+    colorpalette->SetColorCount( num);
+}
+        
 
 void MainFrame::OnGenerateImage(wxCommandEvent& event)
 {

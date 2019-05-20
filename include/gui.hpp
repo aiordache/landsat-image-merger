@@ -38,7 +38,11 @@ enum
  
 class MainFrame : public wxFrame
 {
-	private:
+	public:
+		MainFrame(wxWindow *parent, const wxString &title = wxT("Satellite Image Processing Project"), wxWindowID id = 1, const wxPoint& pos = wxDefaultPosition, const wxSize& mf_size = wxSize(1200, 800), const long style = wxDEFAULT_FRAME_STYLE);
+		~MainFrame();
+    
+    private:
 	    
         ImageHandler    *imghandler;
         
@@ -65,15 +69,10 @@ class MainFrame : public wxFrame
         void OnRadioStatusChange(wxCommandEvent& event);
         void OnPaletteRadioStatusChange(wxCommandEvent& event);
         void OnColorPaletteChange(wxCommandEvent& event);
+        void OnColorCounterChange(wxCommandEvent& event);
         void CreateGUIControls(const wxSize& mf_size);
 
-
         DECLARE_EVENT_TABLE();
-
-	public:
-		MainFrame(wxWindow *parent, const wxString &title = wxT("Satellite Image Processing Project"), wxWindowID id = 1, const wxPoint& pos = wxDefaultPosition, const wxSize& mf_size = wxSize(1200, 800), const long style = wxDEFAULT_FRAME_STYLE);
-		~MainFrame();
-
 };
 
 
