@@ -1,8 +1,5 @@
 #include <wx/image.h>
-
-//#define interpolate(x,y,i) (((i)/255.0f) * (x) + ((i)/255.0f) * (y) + 0.5f) 
-
-#define interpolate(x,y,i) ((1.0f - ((i)/255.0f)) * (x) + ((i)/255.0f) * (y) + 0.5f) 
+#include <vector>
 
 #define N 8
 
@@ -54,7 +51,7 @@ class ImageHandler
         void            SetImagePath(std::string path, int index);
         void            ResetImagePaths();
         void            ResetColorPalette();
-        void            LoadColorPalette(unsigned int color1, unsigned int color2); 
+        void            LoadColorPalette(std::vector<unsigned int> colorlist); 
         wxImage*        GetImage();
         wxImage*        GetColorPaletteImage();
         

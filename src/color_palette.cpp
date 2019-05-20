@@ -144,7 +144,6 @@ void ColorPalette::CreatePaletteBitmap()
     wxCommandEvent event(COLOR_SELECTED, GetId());
     event.SetEventObject(this);
     ProcessWindowEvent(event);
-    cout<<" EVENT FIRED ====> "<<endl;  
 }
 
 void ColorPalette::SetColorCount(int num)
@@ -169,7 +168,7 @@ void ColorPalette::SetColorCount(int num)
      CreatePaletteBitmap();
      Refresh();
 }
-vector<unsigned int>    ColorPalette::GetColorList()
+vector<unsigned int> ColorPalette::GetColorList()
 {
     return pickedcolors;
 }

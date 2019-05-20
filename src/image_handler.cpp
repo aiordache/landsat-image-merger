@@ -1,9 +1,13 @@
 #include <math.h>
 #include <iostream>
-#include <vector>
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include "image_handler.hpp"
+
+
+#define UIntToRGB(x) { (float)(x & 0x000000ff), (float)((x & 0x0000ff00) >> 8), (float)((x & 0x00ff0000) >> 16)}
+
+
 
 using namespace std;
 using namespace cv;
@@ -42,13 +46,10 @@ ImageHandler::ImageHandler()
     }
     
     colors = defcolors;
-    
-    cout<<"Pointer address: "<<colors<<" is default "<<defcolors<<endl;
 }
 
 void ImageHandler::AddImagePath(string path)
 {
-    //cout<<"Add path : "<<path<<endl;
     int i = 0;
     while(paths[i] != "" && i < N)
         i++;
@@ -57,8 +58,7 @@ void ImageHandler::AddImagePath(string path)
 }
 
 void ImageHandler::SetImagePath(string path, int index)
-{
-    //cout<<" Set image path: "<<path<<" at "<<index<<endl; 
+{ 
     paths[index] = path;
 }
 
@@ -106,32 +106,37 @@ void ImageHandler::UpdateColorPaletteImage()
     
 }
 
-void ImageHandler::LoadColorPalette(unsigned int color1, unsigned int color2)
+void ImageHandler::LoadColorPalette(std::vector<unsigned int> colorlist)
 {
+    int stripe = 256 / (colorlist.size() - 1);
+    
     ResetColorPalette();
-    
-    
-    vector<unsigned int> rgb1 = { (color1 & 0x000000ff), (color1 & 0x0000ff00) >> 8, (color1 & 0x00ff0000) >> 16};
-    vector<unsigned int> rgb2 = {(color2 & 0x000000ff), (color2 & 0x0000ff00) >> 8, (color2 & 0x00ff0000) >> 16};
     
     if (colors != defcolors)
         delete colors;
         
     colors = new Color[256];
     
+    int k = 0;
+    
     for(int i = 0; i < 256; i++)
-    {   
-        float r = interpolate((float)rgb1[0], (float)rgb2[0], i);
-        float g = interpolate((float)rgb1[1], (float)rgb2[1], i);
-        float b = interpolate((float)rgb1[2], (float)rgb2[2], i);
+    {
+        k = i / stripe;   
         
-        //cout <<r<<endl;//<<"  "<<g<<"  "<<b<<endl;  
+        float rgb1[3] = UIntToRGB(colorlist[k]);
+        float rgb2[3] = UIntToRGB(colorlist[k + 1]);
         
-        colors[i].R = (unsigned char) r;
-        colors[i].G = (unsigned char) g;
-        colors[i].B = (unsigned char) b;
-        
-        //cout <<" "<<(int)colors[i].R<< " "<<(int)colors[i].G<<" "<<(int)colors[i].R<<endl;
+        for(int j = 0; j < 3; j++)
+        {
+            float p = (i % stripe)/(float)stripe;
+            float value = (1.0f - p) * rgb1[j] + (p * rgb2[j]) + 0.01f;
+            switch(j)
+            {
+                case 0:  colors[i].R = (unsigned char) value;
+                case 1:  colors[i].G = (unsigned char) value;
+                case 2:  colors[i].B = (unsigned char) value;
+            };
+        }
     }
     
     UpdateColorPaletteImage();
@@ -157,7 +162,6 @@ wxImage* ImageHandler::GetRGBImage()
     Mat color(blue.size(), CV_8UC3);
     
     merge(channels, color);
-    //imwrite("merged.png", color);
     cvtColor(color, color, COLOR_BGR2RGB);
     
     long size = color.cols * color.rows * 3;
@@ -196,7 +200,6 @@ wxImage* ImageHandler::GenerateCommonFormulaIndexImage(std::string band1, std::s
         img.data[i * 3 + 2] = (unsigned char)(colors[color].R);
     }
     
-    imwrite("index.png", img);
     cvtColor(img, img, COLOR_BGR2RGB); 
       
     size = size * 3;

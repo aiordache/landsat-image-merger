@@ -33,8 +33,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
  EVT_RADIOBUTTON(RADIO_CUSTOM_COL_PALETTE, MainFrame::OnPaletteRadioStatusChange)
  
  EVT_COMBOBOX(COLOR_COUNTER, MainFrame::OnColorCounterChange)
- 
- EVT_COMMAND (COLOR_PALETTE, COLOR_SELECTED, MainFrame::OnColorPaletteChange)
+ EVT_COMMAND(COLOR_PALETTE, COLOR_SELECTED, MainFrame::OnColorPaletteChange)
 END_EVENT_TABLE()
 
 
@@ -178,12 +177,8 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     palettebar->AddControl(new wxRadioButton(palettebar, RADIO_DEF_COL_PALETTE, _T("Default Color Scheme")));
     palettebar->AddStretchableSpace();
     palettebar->AddControl(new wxRadioButton(palettebar, RADIO_CUSTOM_COL_PALETTE, _T("Custom Color Scheme")));
-    //palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_START));
-    //palettebar->AddControl(new wxColourPickerCtrl(palettebar, COLOR_END));
     palettebar->AddStretchableSpace();
     
-    //palettebar->FindControl(COLOR_START)->Disable();
-    //palettebar->FindControl(COLOR_END)->Disable();
 
   
     colorpalette = new ColorPalette(palettebar, COLOR_PALETTE, "Color Palette");
@@ -230,26 +225,23 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 
 void MainFrame::UpdateColorPalette()
 {
-     SetTitle("Updating Palette");
-    //remove this 
-    return;
+    SetTitle("Updating Palette");
+
     if (((wxRadioButton*)palettebar->FindControl(RADIO_CUSTOM_COL_PALETTE))->GetValue())
     {
-        unsigned int color1 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_START))->GetColour()).GetRGB();
-           unsigned int color2 = ((wxColour)((wxColourPickerCtrl*)palettebar->FindControl(COLOR_END))->GetColour()).GetRGB();
-        
+        vector<unsigned int> colors = colorpalette->GetColorList();
         // load custom color scheme 
-        imghandler->LoadColorPalette(color1, color2); 
+        imghandler->LoadColorPalette(colors);
     }
     wxStaticBitmap* bitmap = (wxStaticBitmap*)palettebar->FindControl(GRADIENT_BITMAP);
-    
+
     bitmap->SetBitmap(*(imghandler->GetColorPaletteImage()));
-    
+
     SetTitle("Color Palette Updated.");
 }
 
 
-
+ 
 // EVENT HANDLERS
 void MainFrame::OnLoadFromDir( wxCommandEvent& event )
 {
@@ -340,8 +332,6 @@ void MainFrame::OnImageSaveAs(wxCommandEvent& event)
 
 void MainFrame::OnImageRemove(wxCommandEvent& event)
 {
-   SetTitle("");
-   cout<<"Remove Image..."<<endl;
 }
 
 
@@ -367,16 +357,12 @@ void MainFrame::OnPaletteRadioStatusChange(wxCommandEvent& event)
     SetTitle("");
     if (((wxRadioButton*)palettebar->FindControl(RADIO_DEF_COL_PALETTE))->GetValue())
     {
-        //palettebar->FindControl(COLOR_START)->Disable();
-        //palettebar->FindControl(COLOR_END)->Disable();
         colorpalette->Disable();
         ((wxComboBox*)palettebar->FindControl(COLOR_COUNTER))->Disable();
         imghandler->ResetColorPalette();
     }
     else
     {
-        //palettebar->FindControl(COLOR_START)->Enable();
-        //palettebar->FindControl(COLOR_END)->Enable();
         colorpalette->Enable();
         ((wxComboBox*)palettebar->FindControl(COLOR_COUNTER))->Enable();
     }
@@ -385,12 +371,10 @@ void MainFrame::OnPaletteRadioStatusChange(wxCommandEvent& event)
 
 void MainFrame::OnColorPaletteChange(wxCommandEvent& event)
 {
-    cout <<"Update the palette..................."<<endl;
     UpdateColorPalette();
 }
 void MainFrame::OnColorCounterChange(wxCommandEvent& event)
-{
-    cout <<"Update the palette..."<<endl;   
+{ 
     wxComboBox*cb = (wxComboBox*)palettebar->FindControl(COLOR_COUNTER);
         
     int num = wxAtoi(cb->GetStringSelection());
