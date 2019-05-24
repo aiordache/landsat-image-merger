@@ -3,19 +3,25 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include "image_handler.hpp"
+#include "eval.hpp"
 
 
 #define UIntToRGB(x) { (float)(x & 0x000000ff), (float)((x & 0x0000ff00) >> 8), (float)((x & 0x00ff0000) >> 16)}
-
 
 
 using namespace std;
 using namespace cv;
 
 
-
 ImageHandler::ImageHandler()
 {
+    
+    for(int i = 0;i < N; i++)
+    {
+        BANDS[i]   = NULL;
+        paths[i]   = "";
+        exprvar[i] = "";
+    }
     //the current processed image
     image = NULL;
     
@@ -132,9 +138,9 @@ void ImageHandler::LoadColorPalette(std::vector<unsigned int> colorlist)
             float value = (1.0f - p) * rgb1[j] + (p * rgb2[j]) + 0.01f;
             switch(j)
             {
-                case 0:  colors[i].R = (unsigned char) value;
-                case 1:  colors[i].G = (unsigned char) value;
-                case 2:  colors[i].B = (unsigned char) value;
+                case 0:  colors[i].R = (unsigned char) value; break;
+                case 1:  colors[i].G = (unsigned char) value; break;
+                case 2:  colors[i].B = (unsigned char) value; 
             };
         }
     }
@@ -225,117 +231,172 @@ wxImage* ImageHandler::ComputeNDVI()
 }
 
 
-
-
 wxImage* ImageHandler::ComputeNDWI()
 {
     /*
-    Normalized Difference Water Index (NDWI), introduced for the first time in 1996 in Gao (Gao), reflects moisture content in plants and soil and is determined by analogy with NDVI as
-
-    NDWI = (NIR - SWIR)/(NIR + SWIR)
+        Normalized Difference Water Index (NDWI) reflects moisture content in plants and soil
+        NDWI = (NIR - SWIR)/(NIR + SWIR)
     */
     return GenerateCommonFormulaIndexImage(paths[NIR], paths[SWIR1]);
 }
 
 
-
-
-
-
-
-/*
-
-    wxImage* ComputeIndex(wxImage* list[], char* str)
+wxImage* ImageHandler::ComputeCustomIndex(string expr)
+{
+    vector<Mat> bands;
+    cout <<"\n ---- "<< expr<< " ---- "<<endl;
+    
+    cout<<" Expression is valid?  "<<IsValidExpr(expr)<<endl; 
+    if (!IsValidExpr(expr))
     {
-        int n = 0, k = 0;
+        cout<<"Invalid Expression.";
+        return NULL;
+    }
+    cout<<endl<<"Variables: ";
+    for(int i = 0; (i < N) && (exprvar[i] != ""); i++)
+        cout<<exprvar[i]<<" ";
+    
+    cout<<endl;
+    
+    //Mat bands[N];
+    //for(i = 0; (i < N) && (exprvar[i] != ""); i++)
+      
+    
+    return NULL;
+    
+    string band1 = "";
+    string band2 = "";
+    
+    Mat B1   = imread(band1, CV_8UC1);
+    Mat B2   = imread(band2, CV_8UC1);        
+    
+    if (B1.size() != B2.size())
+        return NULL;
+    
+    Mat img = Mat::zeros(B1.size(), CV_8UC3);
+    
+    long size = B1.cols * B1.rows;
+    for(int i = 0; i < size; i++)
+    {
+        float value = (B1.data[i] == B2.data[i]) ? 0 : (float)(B1.data[i] - B2.data[i])/(float)(B1.data[i] + B2.data[i]);
+        // transform from [-1, 1] to [0, 255]
+        unsigned char color = (unsigned char)128 * value + 128; 
+        
+        img.data[i * 3] = (unsigned char)(colors[color].B);
+        img.data[i * 3 + 1] = (unsigned char)(colors[color].G);
+        img.data[i * 3 + 2] = (unsigned char)(colors[color].R);
+    }
+    
+    cvtColor(img, img, COLOR_BGR2RGB); 
+      
+    size = size * 3;
+        
+    if(image != NULL) free(image);
+    
+    image = new wxImage(img.cols, img.rows,(unsigned char*)malloc(size), false);
+    memcpy(image->GetData(), img.data, size);
+	
+    return image;
 
-        n = strlen(str);
-        wxImage* img = GenerateImage(wxSize(list[0]->GetWidth(), list[0]->GetHeight()),IPL_DEPTH_32F,1);
 
-        int index = 0;
-        for (int i = 0; i < img->GetHeight(); i++)
+
+}
+
+bool ImageHandler::IsOperator(char c)
+{
+    switch(c)
+    {
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+        case '(':
+        case ')': return true;
+        default: return false;
+    }
+}
+bool ImageHandler::IsValidExpr(string expr)
+{
+    
+    //check if expression is valid
+    int brackets = 0;
+    
+    int i = 0, j = 0, k = 0;
+    //check brackets first and remove them
+    string str;
+    for(i = 0; i <expr.size(); i++)
+    {
+        if (brackets < 0)
+            break;
+        if (expr[i] == '('){
+         brackets++;
+         continue;
+        }
+        else if (expr[i] == ')')
         {
-            unsigned char k1 = 0;
-            unsigned char* row[7];
-
-            while(list[k1]!= 0)
-            {
-                row[k1] = &CV_IMAGE_ELEM(list[k1], unsigned char, i, 0 );
-                k1++;
-            }
-            for( int j = 0; j < img->GetWidth(); j++)
-            {
-                float value[20];
-
-                index = 0;
-                int index = 0;
-
-                k = 0;
-                while(k < n)
-                {
-                    switch(str[k])
-                    {
-                        case '+':
-                            {
-                                value[index - 2] = value[index - 1] + value[index - 2];
-                                index = index - 1;
-                                break;
-                            }
-                        case '-':
-                            {
-                                value[index - 2] = value[index - 1] - value[index - 2];
-                                index = index - 1;
-                                break;
-                            }
-                        case '*':
-                            {
-                                value[index - 2] = value[index - 1] * value[index - 2];
-                                index = index - 1;
-                                break;
-                            }
-                        case '/':
-                            {
-                                value[index - 2] =(float) 128 + 128*(value[index - 1] / (float)value[index - 2]);
-                                index = index - 1;
-                                break;
-                            }
-                        case 'b':
-                            {
-                                value[index] = (float)(row[(int)(str[k + 1] - '0')][j]);
-                                k++;
-                                index++;
-                                break;
-                            }
-                        default:
-                            {
-
-                                float no = 0.0;
-                                int x = k;
-                                while(str[x] >= '0' && str[x] <= '9')
-                                x++;
-                                //form the scalar from string
-                                for(int q = k; q < x; q++)
-                                    no = no * 10 + (str[q] - '0');
-
-                                value[index] = no;
-                                index++;
-                                break;
-                            }
-                    }
-                    k++;
-                }
-                ((float*)img->m_refData)[i * img->GetWidth() + j] = value[index - 1];
+            brackets--;
+            continue;
+        }
+        str += expr[i];
+    }
+    if (brackets != 0 || IsOperator(str[0]) || IsOperator(str[str.size() - 1]))
+    {
+        return false;
+    }
+    
+    bool valid   = true;
+    
+    i = 0;
+    j = 0;
+    while(i < str.size())
+    {
+        while (j < str.size()) 
+        {
+            if (IsOperator(str[j]))    
+                break;
+            j++;
+        }
+        
+        if (j  < str.size() && i == j)
+        {
+            valid = false;
+            break;
+        }
+        
+        bool var_b = false;
+        if(str[i] == 'b' || str[i] == 'B')
+        {
+            var_b = true;
+            i++;
+        }           
+        string s = str.substr(i, j - i);
+        int x = stoi(s);
+        if (to_string(x) != s)
+        {
+            valid = false;
+            break;
+        }
+        else 
+        if (var_b && x >N)
+        {
+            valid = false;
+            break;
+        }
+        else
+        {
+            if (var_b)
+            { 
+                exprvar[k] = str.substr(i - 1, j - i + 1);
+                k++;
             }
         }
-        wxImage* Image = GenerateImage(wxSize(img->GetWidth(), img->GetHeight()),CV_DEPTH_MAX,1);
-
-        cvConvertScale(img, Image, 1, 0);
-
-        return Image;
+        j++;
+        i = j; 
     }
+    if (!valid || brackets != 0)
+    {
+        return false;
+    }
+    return true;
+}
 
-*/
-
-
-
-//"Hello World, Where there is will, there is a way."

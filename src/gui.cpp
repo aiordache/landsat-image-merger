@@ -1,14 +1,14 @@
-
+#include <wx/event.h>
 #include <wx/filedlg.h>
 #include <dirent.h>
 #include "xpm_icons.hpp"
 #include "gui.hpp"
 #include <vector>
 #include <algorithm>
+
 using namespace std;
 
 BEGIN_EVENT_TABLE(MainFrame, wxFrame)
- EVT_MENU(MENU_Remove,  MainFrame::OnImageRemove)
  EVT_MENU(MENU_SaveAs,  MainFrame::OnImageSaveAs)
  EVT_MENU(MENU_Exit,    MainFrame::OnExit)
  EVT_MENU(MENU_Clear,   MainFrame::OnDiscardAllImages)
@@ -22,8 +22,11 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
  EVT_MENU(B6,   MainFrame::OnLoadImage)
  EVT_MENU(B7,   MainFrame::OnLoadImage)
  EVT_MENU(B8,   MainFrame::OnLoadImage)
-
- EVT_BUTTON(GENERATE_BUTTON,    MainFrame::OnGenerateImage)
+ EVT_MENU(B9,   MainFrame::OnLoadImage)
+ EVT_MENU(B10,   MainFrame::OnLoadImage)
+ EVT_MENU(B11,   MainFrame::OnLoadImage)
+ EVT_MENU(B12,   MainFrame::OnLoadImage)
+ 
  EVT_RADIOBUTTON(RADIO_RGB,     MainFrame::OnRadioStatusChange)
  EVT_RADIOBUTTON(RADIO_NDVI,    MainFrame::OnRadioStatusChange)
  EVT_RADIOBUTTON(RADIO_NDWI,    MainFrame::OnRadioStatusChange)
@@ -34,6 +37,7 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
  
  EVT_COMBOBOX(COLOR_COUNTER, MainFrame::OnColorCounterChange)
  EVT_COMMAND(COLOR_PALETTE, COLOR_SELECTED, MainFrame::OnColorPaletteChange)
+ 
 END_EVENT_TABLE()
 
 
@@ -138,6 +142,32 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     menubar->AddTool(B8, wxT("Band 8 - Panchromatic"), wxBitmap(add_image_icon));
     menubar->SetToolShortHelp(B8, "Band 8 - panchromatic");
     
+     st = new wxStaticText(menubar, wxID_ANY, _("B9"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B9, wxT("Band 9"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B9, "Band 9");
+    
+     st = new wxStaticText(menubar, wxID_ANY, _("B10"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B10, wxT("Band 10"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B10, "Band 10");
+    
+     st = new wxStaticText(menubar, wxID_ANY, _("B11"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B11, wxT("Band 11"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B11, "Band 11");
+    
+     st = new wxStaticText(menubar, wxID_ANY, _("B12"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st->SetFont(font);
+    menubar->AddControl(st);
+    menubar->AddTool(B12, wxT("Band 12"), wxBitmap(add_image_icon));
+    menubar->SetToolShortHelp(B12, "Band 12");
+    
+    
+    
     
     menubar->AddStretchableSpace();
     menubar->AddSeparator();
@@ -149,21 +179,20 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 
     operationsbar = new wxToolBar(this, wxID_ANY);
     
-    formula = new wxTextCtrl(operationsbar, wxID_ANY,
-        "",wxDefaultPosition, wxSize(200, 30));
+    formula = new wxTextCtrl(operationsbar, FORMULA,
+        "",wxDefaultPosition, wxSize(200, 30), wxTE_PROCESS_ENTER);
     formula->SetFont(wxFont(14, wxDECORATIVE, wxITALIC, wxNORMAL));
     formula->Disable();
-
-    operationsbar->AddStretchableSpace();
+    
+    formula->Bind(wxEVT_CHAR, &MainFrame::OnFormulaKeyDown, this);
+    
+    
     
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_RGB, _T("RGB")));
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_NDVI, _T("NDVI")));
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_NDWI, _T("NDWI")));
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_FORMULA, _T("Band Combination")));
     operationsbar->AddControl(formula);
-    
-    operationsbar->AddStretchableSpace();
-    operationsbar->AddControl(new wxButton(operationsbar, GENERATE_BUTTON, _T("Generate IMAGE"), wxDefaultPosition, wxDefaultSize, 0));
     operationsbar->AddStretchableSpace();    
     operationsbar->Realize();
 
@@ -214,14 +243,46 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 
     wxBoxSizer *mainsizer = new wxBoxSizer(wxVERTICAL);
     mainsizer->Add(menubar, 0, wxEXPAND);
-    mainsizer->Add(operationsbar, 0, wxEXPAND | wxLEFT);
     mainsizer->Add(palettebar, 0, wxEXPAND | wxLEFT);
+    mainsizer->Add(operationsbar, 0, wxEXPAND | wxLEFT);
     
     mainsizer->Add(displaypanel, 1, wxEXPAND | wxALL, 10);
     
     SetSizer(mainsizer);
     
 }
+
+
+void MainFrame::UpdateImage()
+{
+   SetTitle("Updating image ....");
+   
+   wxImage* img = NULL;
+   if (((wxRadioButton*)operationsbar->FindControl(RADIO_RGB))->GetValue())
+        img = imghandler->GetRGBImage();
+   else
+   if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDVI))->GetValue())
+        img = imghandler->ComputeNDVI();
+   else
+   if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDWI))->GetValue())
+        img = imghandler->ComputeNDWI();
+    else
+    if (((wxRadioButton*)operationsbar->FindControl(RADIO_FORMULA))->GetValue())
+    { 
+        string s = (string)formula->GetLineText(0).c_str();
+        img = imghandler->ComputeCustomIndex(s);
+    }    
+   
+   if (img != NULL)
+    {
+        ic->SetImage(img);
+        SetTitle("");
+    }
+    else
+        SetTitle("Failed to generate image.");
+}
+
+
 
 void MainFrame::UpdateColorPalette()
 {
@@ -237,7 +298,9 @@ void MainFrame::UpdateColorPalette()
 
     bitmap->SetBitmap(*(imghandler->GetColorPaletteImage()));
 
-    SetTitle("Color Palette Updated.");
+    SetTitle("Color Palette Updated. Apply to image...");
+    
+    UpdateImage();
 }
 
 
@@ -277,6 +340,8 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
                 imghandler->AddImagePath(filenames[i]);
                 menubar->SetToolNormalBitmap(B1+i, wxBitmap(color_image_icon));
             }
+        
+        UpdateImage();
     }
 
 }
@@ -284,7 +349,6 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
 void MainFrame::OnLoadImage( wxCommandEvent& event )
 {
    SetTitle("");
-   //ic->SetImage(wxBitmap(wxT("resources/icons/logo.png"), wxBITMAP_TYPE_PNG).ConvertToImage());
    int id = event.GetId();
    //load image file
    wxFileDialog dlg(
@@ -299,8 +363,6 @@ void MainFrame::OnLoadImage( wxCommandEvent& event )
 		// set button image
         menubar->SetToolNormalBitmap(id, wxBitmap(color_image_icon));
 	}
-
-   
 }
 
 void MainFrame::OnDiscardAllImages( wxCommandEvent& event )
@@ -330,25 +392,23 @@ void MainFrame::OnImageSaveAs(wxCommandEvent& event)
     }
 }
 
-void MainFrame::OnImageRemove(wxCommandEvent& event)
-{
-}
-
-
 void MainFrame::OnExit( wxCommandEvent& event )
 {
-  SetTitle("Exiting...");
-  Close(TRUE);
-  
+    SetTitle("Exiting...");
+    Close(TRUE);
 }
 
 void MainFrame::OnRadioStatusChange(wxCommandEvent& event)
 {
     SetTitle("");
     if (((wxRadioButton*)operationsbar->FindControl(RADIO_FORMULA))->GetValue())
+    {
         formula->Enable();
+        return;
+    }
     else
         formula->Disable();
+    UpdateImage();
 }
 
 
@@ -381,31 +441,28 @@ void MainFrame::OnColorCounterChange(wxCommandEvent& event)
     
     colorpalette->SetColorCount( num);
 }
-        
 
-void MainFrame::OnGenerateImage(wxCommandEvent& event)
+void MainFrame::OnFormulaKeyDown(wxKeyEvent& event)
 {
-   SetTitle("Generating RGB image ....");
-   
-   wxImage* img = NULL;
-   if (((wxRadioButton*)operationsbar->FindControl(RADIO_RGB))->GetValue())
-        img = imghandler->GetRGBImage();
-   else
-   if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDVI))->GetValue())
-        img = imghandler->ComputeNDVI();
-   else
-   if (((wxRadioButton*)operationsbar->FindControl(RADIO_NDWI))->GetValue())
-        img = imghandler->ComputeNDWI();
-        
-   
-   
-   
-   if (img != NULL)
+    int key = event.GetKeyCode();
+    if (key == WXK_BACK || key == WXK_LEFT || key == WXK_RIGHT)
     {
-        ic->SetImage(img);
-        SetTitle("");
+        event.Skip();
+        return;
     }
-    else
-        SetTitle("Failed to generate image.");
+       
+    if(key == WXK_RETURN)
+    {   
+        event.Skip();
+        UpdateImage();
+        return;
+    }
+    
+    char c = event.GetUnicodeKey();
+    const string allowedchars = "bB0123456789+-*/()";
+    
+    if (int(allowedchars.find(c)) != -1)
+        event.Skip();
+
 }
 

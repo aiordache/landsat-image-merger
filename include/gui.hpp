@@ -8,7 +8,6 @@
 #endif
 #include <wx/textctrl.h>
 #include <wx/button.h>
-#include <wx/clrpicker.h>
 #include "image_container.hpp"
 #include "image_handler.hpp"
 #include "color_palette.hpp"
@@ -20,8 +19,7 @@ enum
     MENU_SaveAs,
     MENU_Clear,
     IMAGE_DIR,
-    B1,B2,B3,B4,B5,B6,B7,B8,
-    GENERATE_BUTTON,
+    B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,
     RADIO_RGB,
     RADIO_NDVI,
     RADIO_NDWI,
@@ -30,7 +28,8 @@ enum
     RADIO_CUSTOM_COL_PALETTE,
     GRADIENT_BITMAP,
     COLOR_COUNTER,
-    COLOR_PALETTE
+    COLOR_PALETTE,
+    FORMULA
   };
  
  
@@ -51,7 +50,7 @@ class MainFrame : public wxFrame
         ColorPalette    *colorpalette;    
         ImageContainer  *ic;
         
-        
+        void UpdateImage();
         void UpdateColorPalette();
         
         // EVENT HANDLERS
@@ -59,15 +58,16 @@ class MainFrame : public wxFrame
         void OnLoadImage(wxCommandEvent& event);
         
         void OnImageSaveAs(wxCommandEvent& event);
-        void OnImageRemove(wxCommandEvent& event);
         void OnExit(wxCommandEvent& event );
         void OnDiscardAllImages(wxCommandEvent& event );
 
-	    void OnGenerateImage(wxCommandEvent& event);
         void OnRadioStatusChange(wxCommandEvent& event);
         void OnPaletteRadioStatusChange(wxCommandEvent& event);
         void OnColorPaletteChange(wxCommandEvent& event);
         void OnColorCounterChange(wxCommandEvent& event);
+        
+        void OnFormulaEnter(wxCommandEvent& event);
+        void OnFormulaKeyDown(wxKeyEvent& event);
         void CreateGUIControls(const wxSize& mf_size);
 
         DECLARE_EVENT_TABLE();
