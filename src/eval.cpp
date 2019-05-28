@@ -1,28 +1,32 @@
-
 #include <stack>
 #include "eval.hpp"
 
 using namespace std;
 
-int Eval::operator()(unordered_map<std::string, int> values) const 
+float Eval::operator()(unordered_map<std::string, float> values) const 
 { 
-    stack<int> s;
+    stack<float> s;
     for(int i = 0; i < pfexpr.size(); i++)
     {
         int pos = operators.find(pfexpr[i]); 
         if (pos < 0 || pos >= operators.size())
-            s.push(values[pfexpr[i]]);
+        {
+            if (values.find(pfexpr[i]) == values.end())
+                s.push(stof(pfexpr[i]));
+            else
+                s.push(values[pfexpr[i]]);
+        }
         else
         {
-            int v1 = s.top();s.pop(); 
-            int v2 = s.top();s.pop();
+            float v1 = s.top();s.pop(); 
+            float v2 = s.top();s.pop();
             switch (pfexpr[i][0])  
             {  
                 case '+': s.push(v2 + v1); break;  
                 case '-': s.push(v2 - v1); break;  
                 case '*': s.push(v2 * v1); break;  
-                case '/': s.push(v2 / v1); break;  
-            }  
+                case '/': v1 == 0 && v2 == 0? s.push(0) : v1 == 0 ? s.push(v2/0.000001f): s.push(v2/v1); break;  
+            }
         }
     }
     return s.top(); 
@@ -33,7 +37,6 @@ void Eval::ToPostfixNotation(string e)
 {
     unordered_map<char, int> precedence = {{'+',1},{'-',1},{'*',2},{'/',2},{'(',0},{')',0}};
     stack<char> s;
-    int i = 0;
     for(int i = 0; i < e.length(); i++)
     {
         if (precedence.count(e[i]) > 0)

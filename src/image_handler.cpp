@@ -1,6 +1,6 @@
 #include <math.h>
 #include <iostream>
-#include <opencv2/opencv.hpp>
+#include <unordered_map>
 #include <opencv2/imgcodecs.hpp>
 #include "image_handler.hpp"
 #include "eval.hpp"
@@ -12,16 +12,37 @@
 using namespace std;
 using namespace cv;
 
+static float MAX;
+static float MIN;
+
+static void combinations(Eval F, vector<string> params, vector<int> allowed_values, vector<int> values, int n) 
+{
+	if (n == 0)
+	{
+	    unordered_map<string, float> input;
+	    for(int i = 0; i < values.size(); i++)
+		    input[params[i]] = values[i];
+		float y = F(input);
+		if (y > MAX)
+		    MAX = y;
+		else if (y < MIN)
+		    MIN = y;
+		return; 
+	} 
+	for (int i = 0; i < allowed_values.size(); i++) 
+	{
+	    vector<int> x = values;
+	    x.push_back(allowed_values[i]);
+		combinations(F, params, allowed_values, x, n - 1);  
+	}
+}
+
 
 ImageHandler::ImageHandler()
 {
     
     for(int i = 0;i < N; i++)
-    {
-        BANDS[i]   = NULL;
         paths[i]   = "";
-        exprvar[i] = "";
-    }
     //the current processed image
     image = NULL;
     
@@ -60,18 +81,26 @@ void ImageHandler::AddImagePath(string path)
     while(paths[i] != "" && i < N)
         i++;
     if (i >= 0 && i < N)    
+    {
         paths[i] = path;
+        bands[i] = imread(paths[i], CV_8UC1);
+    }
 }
 
 void ImageHandler::SetImagePath(string path, int index)
 { 
     paths[index] = path;
+    bands[index] = imread(path, CV_8UC1);
 }
 
 void ImageHandler::ResetImagePaths()
 {
     for (int i = 0; i < N; i++)
+    {
+        if (paths[i] != "")
+            bands[i].release();
         paths[i].clear();
+    }
     if (image)  free(image);
     image = NULL;
 
@@ -160,9 +189,9 @@ wxImage* ImageHandler::GetRGBImage()
     if (paths[R] == "" || paths[G] == "" || paths[B] == "")
         return NULL;
     
-    Mat blue  = imread(paths[B], CV_8UC1);
-    Mat green = imread(paths[G], CV_8UC1);
-    Mat red   = imread(paths[R], CV_8UC1);
+    Mat blue  = bands[B];
+    Mat green = bands[G];
+    Mat red   = bands[R];
     
     vector<Mat> channels = {blue, green, red};
     Mat color(blue.size(), CV_8UC3);
@@ -180,14 +209,14 @@ wxImage* ImageHandler::GetRGBImage()
     return image;
 }
 
-wxImage* ImageHandler::GenerateCommonFormulaIndexImage(std::string band1, std::string band2)
+wxImage* ImageHandler::GenerateCommonFormulaIndexImage(int band1, int band2)
 {
     /*
         Several indexes are calculated using the formula
         INDEX = (B1 - B2)/(B1 + B2)
     */
-    Mat B1   = imread(band1, CV_8UC1);
-    Mat B2   = imread(band2, CV_8UC1);        
+    Mat B1   = bands[band1];
+    Mat B2   = bands[band2];        
     
     if (B1.size() != B2.size())
         return NULL;
@@ -227,7 +256,7 @@ wxImage* ImageHandler::ComputeNDVI()
         NDVI = (NIR - RED)/(NIR + RED)
     */
     
-    return GenerateCommonFormulaIndexImage(paths[NIR], paths[R]);
+    return GenerateCommonFormulaIndexImage(NIR, R);
 }
 
 
@@ -237,54 +266,57 @@ wxImage* ImageHandler::ComputeNDWI()
         Normalized Difference Water Index (NDWI) reflects moisture content in plants and soil
         NDWI = (NIR - SWIR)/(NIR + SWIR)
     */
-    return GenerateCommonFormulaIndexImage(paths[NIR], paths[SWIR1]);
+    return GenerateCommonFormulaIndexImage(NIR, SWIR1);
 }
 
 
 wxImage* ImageHandler::ComputeCustomIndex(string expr)
 {
-    vector<Mat> bands;
     cout <<"\n ---- "<< expr<< " ---- "<<endl;
-    
-    cout<<" Expression is valid?  "<<IsValidExpr(expr)<<endl; 
     if (!IsValidExpr(expr))
     {
         cout<<"Invalid Expression.";
         return NULL;
     }
-    cout<<endl<<"Variables: ";
-    for(int i = 0; (i < N) && (exprvar[i] != ""); i++)
-        cout<<exprvar[i]<<" ";
     
-    cout<<endl;
-    
-    //Mat bands[N];
-    //for(i = 0; (i < N) && (exprvar[i] != ""); i++)
-      
-    
-    return NULL;
-    
-    string band1 = "";
-    string band2 = "";
-    
-    Mat B1   = imread(band1, CV_8UC1);
-    Mat B2   = imread(band2, CV_8UC1);        
-    
-    if (B1.size() != B2.size())
+    vector<int> bindex;
+    unordered_map<string, float> varmap;
+    for(int i = 0; i < exprvar.size(); i++)
+    {
+        string s = exprvar[i].substr(0,  string::npos);
+        bindex.push_back(stoi(s.erase(0, 1)) - 1);
+    }
+    if (bindex.size() == 0)
+    {
+        cout<<"Invalid Expression.";
         return NULL;
+    }
     
-    Mat img = Mat::zeros(B1.size(), CV_8UC3);
+    CalculateInterval(expr);
     
-    long size = B1.cols * B1.rows;
+    Eval eval(expr);
+    
+    float min = interval[0];
+    float max = interval[1];
+    
+    cout<<" Max: "<<max<<"  Min: "<<min<<endl;
+    cout<<"  "<< bands[bindex[0]].size();
+    
+    Mat img = Mat::zeros(bands[bindex[0]].size(), CV_8UC3);
+    
+    long size = img.cols * img.rows;
     for(int i = 0; i < size; i++)
     {
-        float value = (B1.data[i] == B2.data[i]) ? 0 : (float)(B1.data[i] - B2.data[i])/(float)(B1.data[i] + B2.data[i]);
-        // transform from [-1, 1] to [0, 255]
-        unsigned char color = (unsigned char)128 * value + 128; 
+        for(int j = 0; j < bindex.size();j++)
+            varmap[exprvar[j]] = bands[bindex[j]].data[i];
         
-        img.data[i * 3] = (unsigned char)(colors[color].B);
-        img.data[i * 3 + 1] = (unsigned char)(colors[color].G);
-        img.data[i * 3 + 2] = (unsigned char)(colors[color].R);
+        float value = eval(varmap);
+        // transform from [min, max] to [0, 255]
+        unsigned char color = (unsigned char)(value * 255.f/(max - min)); 
+        
+        img.data[i * 3]     = colors[color].B;
+        img.data[i * 3 + 1] = colors[color].G;
+        img.data[i * 3 + 2] = colors[color].R;
     }
     
     cvtColor(img, img, COLOR_BGR2RGB); 
@@ -297,9 +329,6 @@ wxImage* ImageHandler::ComputeCustomIndex(string expr)
     memcpy(image->GetData(), img.data, size);
 	
     return image;
-
-
-
 }
 
 bool ImageHandler::IsOperator(char c)
@@ -317,20 +346,20 @@ bool ImageHandler::IsOperator(char c)
 }
 bool ImageHandler::IsValidExpr(string expr)
 {
-    
-    //check if expression is valid
+   //check if expression is valid
     int brackets = 0;
     
-    int i = 0, j = 0, k = 0;
+    int i = 0, j = 0;
     //check brackets first and remove them
     string str;
     for(i = 0; i <expr.size(); i++)
     {
         if (brackets < 0)
             break;
-        if (expr[i] == '('){
-         brackets++;
-         continue;
+        if (expr[i] == '(')
+        {
+            brackets++;
+            continue;
         }
         else if (expr[i] == ')')
         {
@@ -340,11 +369,10 @@ bool ImageHandler::IsValidExpr(string expr)
         str += expr[i];
     }
     if (brackets != 0 || IsOperator(str[0]) || IsOperator(str[str.size() - 1]))
-    {
         return false;
-    }
     
     bool valid   = true;
+    exprvar.clear();
     
     i = 0;
     j = 0;
@@ -377,26 +405,39 @@ bool ImageHandler::IsValidExpr(string expr)
             break;
         }
         else 
-        if (var_b && x >N)
+        if (var_b && x >N && x <= 0)
         {
             valid = false;
             break;
         }
         else
-        {
             if (var_b)
-            { 
-                exprvar[k] = str.substr(i - 1, j - i + 1);
-                k++;
+            {
+                string value = str.substr(i - 1, j - i + 1);
+                if (find(exprvar.begin(), exprvar.end(), value) == exprvar.end())
+                    exprvar.push_back(value);
             }
-        }
         j++;
-        i = j; 
+        i = j;
     }
     if (!valid || brackets != 0)
-    {
         return false;
-    }
     return true;
 }
+
+
+void ImageHandler::CalculateInterval(string expr)
+{
+    Eval eval(expr);
+    
+    MAX=MIN=0;
+    
+    combinations(eval, exprvar, {0, 255}, {}, exprvar.size());
+    
+    interval[0] = MIN;
+    interval[1] = MAX;
+}
+
+
+
 

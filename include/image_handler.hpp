@@ -1,4 +1,5 @@
 #include <wx/image.h>
+#include <opencv2/opencv.hpp>
 #include <vector>
 #include <stack>
 
@@ -27,24 +28,25 @@ enum
 class ImageHandler
 {
     private:
-        wxImage* image;
+    
+        std::vector<std::string>     exprvar;
+        wxImage*                     image;
         //Landsat Bands
-        wxImage*        BANDS[N];
-        
+        cv::Mat         bands[N];
         std::string     paths[N];
-        std::string     exprvar[N];
-        
+        int             interval[2] = {0, 255};
         int             width;
         int             height;
         
         Color           defcolors[256];
         Color           *colors = NULL;
         wxImage         *palette = NULL;   
-        wxImage*        GenerateCommonFormulaIndexImage(std::string band1, std::string band2);
+        wxImage*        GenerateCommonFormulaIndexImage(int band1, int band2);
         void            UpdateColorPaletteImage();
         bool            IsOperator(char c);
         
         bool            IsValidExpr(std::string expr);
+        void            CalculateInterval(std::string expr);
     public:
         ImageHandler();
         

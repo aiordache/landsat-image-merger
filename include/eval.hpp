@@ -15,8 +15,8 @@ class Eval {
         {
             ToPostfixNotation(expr); 
         };
-        int operator()(std::unordered_map<std::string, int> values) const; 
+        float operator()(std::unordered_map<std::string, float> values) const; 
 
-     
+        std::vector<float> GetInterval(int min, int max);
 };
 
