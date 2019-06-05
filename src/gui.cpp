@@ -62,7 +62,9 @@ MainFrame::MainFrame(wxWindow *parent, const wxString &title, wxWindowID id, con
 
 MainFrame::~MainFrame()
 {
-
+    delete imghandler;
+    delete ic;
+    
 
 }
 
@@ -83,12 +85,6 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     menubar->AddTool(IMAGE_DIR, wxT("Band dir"), wxBitmap(folder_icon));
     menubar->SetToolShortHelp(IMAGE_DIR, "Load images from directory");
     menubar->AddSeparator();
-    
-
-    // here add the landsat bands text and load buttons
-    //family can be: wx.DECORATIVE, wx.DEFAULT,wx.MODERN, wx.ROMAN, wx.SCRIPT or wx.SWISS.
-    //style can be: wx.NORMAL, wx.SLANT or wx.ITALIC.
-    //weight can be: wx.NORMAL, wx.LIGHT, or wx.BOLD
 
     wxFont font = wxFont(8, wxDECORATIVE, wxITALIC, wxNORMAL); 
     wxSize textsize = wxSize(18, -1);
@@ -298,9 +294,9 @@ void MainFrame::UpdateColorPalette()
 
     bitmap->SetBitmap(*(imghandler->GetColorPaletteImage()));
 
-    SetTitle("Color Palette Updated. Apply to image...");
+    //SetTitle("Color Palette Updated. Apply to image...");
     
-    UpdateImage();
+    //UpdateImage();
 }
 
 
@@ -335,8 +331,9 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
         //sort filenames
         std::sort(filenames.begin(), filenames.end());
         for (int i = 0; i < filenames.size(); ++i)
-            if (i <= B8 - B1)
+            if (i <= B12 - B1)
             {
+                cout<<"Adding "<<filenames[i]<<" as Band "<<i + 1<<endl;
                 imghandler->AddImagePath(filenames[i]);
                 menubar->SetToolNormalBitmap(B1+i, wxBitmap(color_image_icon));
             }
@@ -369,7 +366,7 @@ void MainFrame::OnDiscardAllImages( wxCommandEvent& event )
 {
     SetTitle("");
     //change icons in menubar
-    for(int id = B1; id <= B8; id++)
+    for(int id = B1; id <= B12; id++)
         menubar->SetToolNormalBitmap(id, wxBitmap(add_image_icon));
      
     imghandler->ResetImagePaths();
