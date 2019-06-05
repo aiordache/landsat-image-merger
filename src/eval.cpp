@@ -1,7 +1,9 @@
 #include <stack>
+#include <opencv2/imgcodecs.hpp>
 #include "eval.hpp"
 
 using namespace std;
+using namespace cv;
 
 float Eval::operator()(unordered_map<std::string, float> values) const 
 { 

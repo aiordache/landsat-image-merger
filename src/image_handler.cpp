@@ -2,6 +2,8 @@
 #include <iostream>
 #include <unordered_map>
 #include <opencv2/imgcodecs.hpp>
+
+#include <pthread.h>
 #include "image_handler.hpp"
 #include "eval.hpp"
 
@@ -14,6 +16,18 @@ using namespace cv;
 
 static float MAX;
 static float MIN;
+
+typedef struct arguments {
+    long start;
+    long end;
+    unordered_map<string, Mat> bandmap;
+    Eval F;
+    wxImage* image;
+    float min;
+    float max;
+    Color* colors;
+} Args;
+
 
 static void combinations(Eval F, vector<string> params, vector<int> allowed_values, vector<int> values, int n) 
 {
@@ -37,6 +51,28 @@ static void combinations(Eval F, vector<string> params, vector<int> allowed_valu
 	}
 }
 
+void* split_work(void* arg)
+{
+   Args* p = (Args*)arg;
+   
+   unordered_map<string, float> values;
+   for(long i = p->start; i < p->end; i++)
+    {
+        
+        for (auto item : p->bandmap) 
+            values[item.first] = (float)item.second.data[i];
+        float value = p->F(values);
+        
+        // transform from [min, max] to [0, 255]
+        unsigned char color = (unsigned char)(value * 255.f/(MAX - MIN)); 
+        
+        p->image->GetData()[i * 3]     = (unsigned char)p->colors[color].R;
+        p->image->GetData()[i * 3 + 1] = (unsigned char)p->colors[color].G;
+        p->image->GetData()[i * 3 + 2] = (unsigned char)p->colors[color].B;
+    }
+    
+    return NULL;
+}  
 
 ImageHandler::ImageHandler()
 {
@@ -101,7 +137,7 @@ void ImageHandler::ResetImagePaths()
             bands[i].release();
         paths[i].clear();
     }
-    if (image)  free(image);
+    if (image)  delete image;
     image = NULL;
 
 }
@@ -280,7 +316,7 @@ wxImage* ImageHandler::ComputeCustomIndex(string expr)
     }
     
     vector<int> bindex;
-    unordered_map<string, float> varmap;
+    unordered_map<string, Mat> varmap;
     for(int i = 0; i < exprvar.size(); i++)
     {
         string s = exprvar[i].substr(0,  string::npos);
@@ -302,32 +338,42 @@ wxImage* ImageHandler::ComputeCustomIndex(string expr)
     cout<<" Max: "<<max<<"  Min: "<<min<<endl;
     cout<<"  "<< bands[bindex[0]].size();
     
-    Mat img = Mat::zeros(bands[bindex[0]].size(), CV_8UC3);
     
-    long size = img.cols * img.rows;
-    for(int i = 0; i < size; i++)
-    {
-        for(int j = 0; j < bindex.size();j++)
-            varmap[exprvar[j]] = bands[bindex[j]].data[i];
+    for(int j = 0; j < bindex.size();j++)
+        varmap[exprvar[j]] = bands[bindex[j]];
+    
+    Size size = bands[bindex[0]].size();
+    
+    if (image != NULL) delete image;
         
-        float value = eval(varmap);
-        // transform from [min, max] to [0, 255]
-        unsigned char color = (unsigned char)(value * 255.f/(max - min)); 
+    image = new wxImage(size.width, size.height,(unsigned char*)malloc(size.width * size.height *3), false);
+    
+    int T = 100;
+    pthread_t threads[T];
+
+    long stripe = size.width * size.height/ T;
+    
+    Args* a[T];
+    
+    for(int i = 0; i < T; i++) 
+    {  
+        a[i] = new Args({i*stripe, i < T -1 ? (i+1) * stripe : size.width * size.height, varmap, eval, image, min, max, colors});
         
-        img.data[i * 3]     = colors[color].B;
-        img.data[i * 3 + 1] = colors[color].G;
-        img.data[i * 3 + 2] = colors[color].R;
+        if(pthread_create(&threads[i], NULL, &split_work, (void*)a[i]) != 0) 
+        {
+            cout<<"ptread create failed"<<endl;
+            return NULL;
+        }
     }
-    
-    cvtColor(img, img, COLOR_BGR2RGB); 
-      
-    size = size * 3;
-        
-    if(image != NULL) free(image);
-    
-    image = new wxImage(img.cols, img.rows,(unsigned char*)malloc(size), false);
-    memcpy(image->GetData(), img.data, size);
-	
+    for(int i = 0; i < T; i++)   
+    {  
+        if(pthread_join(threads[i], NULL))
+        {
+            printf("Could not join thread\n");
+            return NULL;
+        }
+        delete a[i];
+    }
     return image;
 }
 

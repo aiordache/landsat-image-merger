@@ -47,6 +47,7 @@ class ImageHandler
         
         bool            IsValidExpr(std::string expr);
         void            CalculateInterval(std::string expr);
+        
     public:
         ImageHandler();
         

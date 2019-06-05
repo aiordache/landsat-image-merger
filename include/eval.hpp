@@ -1,6 +1,7 @@
 #include <string.h>
 #include <vector>
 #include <unordered_map>
+#include <opencv2/opencv.hpp>
 
 class Eval {
     private:
@@ -15,7 +16,8 @@ class Eval {
         {
             ToPostfixNotation(expr); 
         };
-        float operator()(std::unordered_map<std::string, float> values) const; 
+        float operator()(std::unordered_map<std::string, float> values) const;
+        cv::Mat operator()(std::unordered_map<std::string, cv::Mat> values, cv::Size size, float min, float max) const; 
 
         std::vector<float> GetInterval(int min, int max);
 };
