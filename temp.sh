@@ -8,7 +8,6 @@ docker run -it --rm \
 	-v /tmp/.X11-unix:/tmp/.X11-unix \
 	-v /root/.Xauthority:/root/.Xauthority:rw  \
 	-v $ABS_PATH:/root \
-    -p 8080:8080 \
     $IMAGEID
 
 

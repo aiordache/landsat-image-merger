@@ -1,5 +1,4 @@
-FROM gtk3 
-#debian:min
+FROM debian:min
 
 RUN apt-get update && apt-get -y install vim wget unzip cmake build-essential libcanberra-gtk3-module 
 #libopencv-dev libboost-all-dev libcanberra-gtk-module 

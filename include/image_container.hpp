@@ -6,6 +6,8 @@ class ImageContainer : public wxScrolledWindow
     private:
         // bitmap to be drawn on the canvas
         wxImage*  image  = NULL;
+        // message to be drawn when image is loading
+        wxString* message = NULL;
         // extracted image area to be drawn
         wxRect    rect   = wxRect(0,0,0,0);
         // zoom 0%
@@ -29,4 +31,6 @@ class ImageContainer : public wxScrolledWindow
     	~ImageContainer();
 
     	void SetImage(wxImage* img);
+    	void SetMessage(wxString* msg);
+    	void Clear();
 };

@@ -18,11 +18,6 @@ class Application : public wxApp
       {
         return 0;
       };
-    ~Application()
-    {
-        std::cout<<"Release memory here...\n";
-        //delete frame;
-    }
 };
 
 

@@ -62,10 +62,13 @@ MainFrame::MainFrame(wxWindow *parent, const wxString &title, wxWindowID id, con
 
 MainFrame::~MainFrame()
 {
-    delete imghandler;
     delete ic;
+    delete imghandler;
     
-
+    menubar->ClearTools();
+    operationsbar->ClearTools();
+    delete menubar;
+    delete operationsbar;
 }
 
 void MainFrame::CreateGUIControls(const wxSize& mf_size)
@@ -156,7 +159,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     menubar->AddTool(B11, wxT("Band 11"), wxBitmap(add_image_icon));
     menubar->SetToolShortHelp(B11, "Band 11");
     
-     st = new wxStaticText(menubar, wxID_ANY, _("B12"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B12"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B12, wxT("Band 12"), wxBitmap(add_image_icon));
@@ -230,8 +233,7 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
     wxPanel* displaypanel = new wxPanel(this, wxID_ANY);
     ic = new ImageContainer(displaypanel, wxID_ANY);
-    ic->SetImage(new wxImage("resources/image.tif"));
-    
+    ic->SetMessage(imghandler->GetMessage());
     
     wxBoxSizer* displaysizer = new wxBoxSizer(wxVERTICAL);
     displaysizer->Add(ic, 1, wxEXPAND);
@@ -251,9 +253,11 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
 
 void MainFrame::UpdateImage()
 {
-   SetTitle("Updating image ....");
-   
    wxImage* img = NULL;
+   wxString msg = "Updating image...";
+   ic->SetMessage(&msg);
+   ic->Clear();
+   
    if (((wxRadioButton*)operationsbar->FindControl(RADIO_RGB))->GetValue())
         img = imghandler->GetRGBImage();
    else
@@ -268,21 +272,19 @@ void MainFrame::UpdateImage()
         string s = (string)formula->GetLineText(0).c_str();
         img = imghandler->ComputeCustomIndex(s);
     }    
+   ic->SetMessage(imghandler->GetMessage());
    
    if (img != NULL)
-    {
         ic->SetImage(img);
-        SetTitle("");
-    }
     else
-        SetTitle("Failed to generate image.");
+        ic->Clear();
 }
 
 
 
 void MainFrame::UpdateColorPalette()
 {
-    SetTitle("Updating Palette");
+    //SetTitle("Updating Palette");
 
     if (((wxRadioButton*)palettebar->FindControl(RADIO_CUSTOM_COL_PALETTE))->GetValue())
     {
@@ -334,8 +336,14 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
             if (i <= B12 - B1)
             {
                 cout<<"Adding "<<filenames[i]<<" as Band "<<i + 1<<endl;
-                imghandler->AddImagePath(filenames[i]);
-                menubar->SetToolNormalBitmap(B1+i, wxBitmap(color_image_icon));
+                if (imghandler->AddImagePath(filenames[i]))
+                    menubar->SetToolNormalBitmap(B1+i, wxBitmap(color_image_icon));
+                else
+                {
+                    ic->SetMessage(imghandler->GetMessage());
+                    ic->Clear();
+                    return;
+                }
             }
         
         UpdateImage();

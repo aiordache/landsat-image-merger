@@ -79,6 +79,8 @@ ImageHandler::ImageHandler()
     
     for(int i = 0;i < N; i++)
         paths[i]   = "";
+        
+    message = new wxString("No Landsat band loaded. Use menu buttons to load them.");
     //the current processed image
     image = NULL;
     
@@ -111,7 +113,13 @@ ImageHandler::ImageHandler()
     colors = defcolors;
 }
 
-void ImageHandler::AddImagePath(string path)
+ImageHandler::~ImageHandler()
+{
+    if (image != NULL) delete image;
+    if (message != NULL) delete message;
+}
+
+bool ImageHandler::AddImagePath(string path)
 {
     int i = 0;
     while(paths[i] != "" && i < N)
@@ -120,13 +128,34 @@ void ImageHandler::AddImagePath(string path)
     {
         paths[i] = path;
         bands[i] = imread(paths[i], CV_8UC1);
+        if (bands[i].data == NULL)
+        {
+            if (message != NULL) delete message;
+            message = new wxString( wxT("Failed to load band: ") + paths[i]);
+            paths[i] = "";
+            return false;
+        }
     }
+    if (message != NULL) delete message;
+    message = NULL;
+    return true;
 }
 
-void ImageHandler::SetImagePath(string path, int index)
+bool ImageHandler::SetImagePath(string path, int index)
 { 
     paths[index] = path;
     bands[index] = imread(path, CV_8UC1);
+    
+    if (message != NULL) delete message;
+    message = NULL;
+    
+    if (bands[index].data == NULL)
+    {
+        message = new wxString(wxT("Failed to load band: ") + paths[index]);
+        paths[index] = "";
+        return false;
+    }
+    return true;
 }
 
 void ImageHandler::ResetImagePaths()
@@ -139,7 +168,9 @@ void ImageHandler::ResetImagePaths()
     }
     if (image)  delete image;
     image = NULL;
-
+    
+    if (message != NULL) delete message;
+    message = new wxString("No Landsat band loaded. Use menu buttons to load them.");
 }
 
 void ImageHandler::ResetColorPalette()
@@ -179,18 +210,23 @@ void ImageHandler::UpdateColorPaletteImage()
 
 void ImageHandler::LoadColorPalette(std::vector<unsigned int> colorlist)
 {
-    int stripe = 256 / (colorlist.size() - 1);
+    int stripe = 255 / (colorlist.size() - 1);
     
     ResetColorPalette();
     
     if (colors != defcolors)
         delete colors;
         
-    colors = new Color[256];
+    colors = new Color[255];
     
     int k = 0;
+    // keep BLACK as first color always
+    colors[0].R = 0;
+    colors[0].G = 0;
+    colors[0].B = 0;
     
-    for(int i = 0; i < 256; i++)
+    
+    for(int i = 0; i < 255; i++)
     {
         k = i / stripe;   
         
@@ -203,9 +239,9 @@ void ImageHandler::LoadColorPalette(std::vector<unsigned int> colorlist)
             float value = (1.0f - p) * rgb1[j] + (p * rgb2[j]) + 0.01f;
             switch(j)
             {
-                case 0:  colors[i].R = (unsigned char) value; break;
-                case 1:  colors[i].G = (unsigned char) value; break;
-                case 2:  colors[i].B = (unsigned char) value; 
+                case 0:  colors[i + 1].R = (unsigned char) value; break;
+                case 1:  colors[i + 1].G = (unsigned char) value; break;
+                case 2:  colors[i + 1].B = (unsigned char) value; 
             };
         }
     }
@@ -223,8 +259,11 @@ wxImage* ImageHandler::GetImage()
 wxImage* ImageHandler::GetRGBImage()
 {
     if (paths[R] == "" || paths[G] == "" || paths[B] == "")
+    {
+        if (message != NULL) delete message;
+        message = new wxString("One or more RGB bands not loaded.");
         return NULL;
-    
+    }
     Mat blue  = bands[B];
     Mat green = bands[G];
     Mat red   = bands[R];
@@ -237,7 +276,7 @@ wxImage* ImageHandler::GetRGBImage()
     
     long size = color.cols * color.rows * 3;
     
-    if(image != NULL) free(image);
+    if(image != NULL) delete image;
     
     image = new wxImage(color.cols, color.rows,(unsigned char*)malloc(size), false);
     memcpy(image->GetData(), color.data, size);
@@ -251,21 +290,35 @@ wxImage* ImageHandler::GenerateCommonFormulaIndexImage(int band1, int band2)
         Several indexes are calculated using the formula
         INDEX = (B1 - B2)/(B1 + B2)
     */
+    if (paths[band1] == "" || paths[band2] == "")
+    {
+        if (message != NULL) delete message;
+        message = new wxString("Targeted bands not loaded.");
+        
+        return NULL;    
+    }
+    
     Mat B1   = bands[band1];
     Mat B2   = bands[band2];        
     
     if (B1.size() != B2.size())
+    {
+        if (message != NULL) delete message;
+        message = new wxString("Check the bands loaded. Different size detected.");
         return NULL;
-    
+    }
     Mat img = Mat::zeros(B1.size(), CV_8UC3);
     
     long size = B1.cols * B1.rows;
     for(int i = 0; i < size; i++)
     {
-        float value = (B1.data[i] == B2.data[i]) ? 0 : (float)(B1.data[i] - B2.data[i])/(float)(B1.data[i] + B2.data[i]);
-        // transform from [-1, 1] to [0, 255]
-        unsigned char color = (unsigned char)128 * value + 128; 
-        
+        unsigned char color = 0;
+        if (B1.data[i] != 0 || B2.data[i] != 0)
+        {   
+            float value = (B1.data[i] == B2.data[i]) ? 0 : (float)(B1.data[i] - B2.data[i])/(float)(B1.data[i] + B2.data[i]);
+            // transform from [-1, 1] to [0, 255]
+            color = (unsigned char)128 * value + 128; 
+        }
         img.data[i * 3] = (unsigned char)(colors[color].B);
         img.data[i * 3 + 1] = (unsigned char)(colors[color].G);
         img.data[i * 3 + 2] = (unsigned char)(colors[color].R);
@@ -275,7 +328,7 @@ wxImage* ImageHandler::GenerateCommonFormulaIndexImage(int band1, int band2)
       
     size = size * 3;
         
-    if(image != NULL) free(image);
+    if(image != NULL) delete image;
     
     image = new wxImage(img.cols, img.rows,(unsigned char*)malloc(size), false);
     memcpy(image->GetData(), img.data, size);
@@ -308,10 +361,10 @@ wxImage* ImageHandler::ComputeNDWI()
 
 wxImage* ImageHandler::ComputeCustomIndex(string expr)
 {
-    cout <<"\n ---- "<< expr<< " ---- "<<endl;
     if (!IsValidExpr(expr))
     {
-        cout<<"Invalid Expression.";
+        if (message != NULL) delete message;
+        message = new wxString("Invalid expression.");
         return NULL;
     }
     
@@ -324,7 +377,8 @@ wxImage* ImageHandler::ComputeCustomIndex(string expr)
     }
     if (bindex.size() == 0)
     {
-        cout<<"Invalid Expression.";
+        if (message != NULL) delete message;
+        message = new wxString("Invalid expression.");
         return NULL;
     }
     
@@ -335,13 +389,16 @@ wxImage* ImageHandler::ComputeCustomIndex(string expr)
     float min = interval[0];
     float max = interval[1];
     
-    cout<<" Max: "<<max<<"  Min: "<<min<<endl;
-    cout<<"  "<< bands[bindex[0]].size();
-    
-    
     for(int j = 0; j < bindex.size();j++)
+    {
+        if (paths[bindex[j]] == "")
+        {
+            if (message != NULL) delete message;
+            message = new wxString("Targeted bands not loaded.");
+            return NULL;
+        }
         varmap[exprvar[j]] = bands[bindex[j]];
-    
+    }
     Size size = bands[bindex[0]].size();
     
     if (image != NULL) delete image;
@@ -361,7 +418,8 @@ wxImage* ImageHandler::ComputeCustomIndex(string expr)
         
         if(pthread_create(&threads[i], NULL, &split_work, (void*)a[i]) != 0) 
         {
-            cout<<"ptread create failed"<<endl;
+            if (message != NULL) delete message;
+            message = new wxString("Error creating thread.");
             return NULL;
         }
     }
@@ -369,7 +427,8 @@ wxImage* ImageHandler::ComputeCustomIndex(string expr)
     {  
         if(pthread_join(threads[i], NULL))
         {
-            printf("Could not join thread\n");
+            if (message != NULL) delete message;
+            message = new wxString("Error joining thread.");
             return NULL;
         }
         delete a[i];
@@ -484,6 +543,9 @@ void ImageHandler::CalculateInterval(string expr)
     interval[1] = MAX;
 }
 
-
+wxString* ImageHandler::GetMessage()
+{
+    return message;
+}
 
 

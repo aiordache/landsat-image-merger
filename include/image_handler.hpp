@@ -30,7 +30,8 @@ class ImageHandler
     private:
     
         std::vector<std::string>     exprvar;
-        wxImage*                     image;
+        wxImage*                     image = NULL;
+        wxString*                    message = NULL;
         //Landsat Bands
         cv::Mat         bands[N];
         std::string     paths[N];
@@ -50,11 +51,10 @@ class ImageHandler
         
     public:
         ImageHandler();
+        ~ImageHandler();
         
-        
-        
-        void            AddImagePath(std::string path);
-        void            SetImagePath(std::string path, int index);
+        bool            AddImagePath(std::string path);
+        bool            SetImagePath(std::string path, int index);
         void            ResetImagePaths();
         void            ResetColorPalette();
         void            LoadColorPalette(std::vector<unsigned int> colorlist); 
@@ -65,25 +65,8 @@ class ImageHandler
         wxImage*        ComputeNDVI();
         wxImage*        ComputeNDWI();
         wxImage*        ComputeCustomIndex(std::string str);
-        /*
-        wxImage* GenerateImage(wxImage* red, wxImage* green, wxImage* blue);
-
-        wxImage* ComputeNDVI(wxImage* red, wxImage* infrared);
-
-        wxImage* ComputeColoredNDVI(wxImage* red, wxImage* infrared);
-
-        wxImage* ComputeNDWI(wxImage* infrared, wxImage* mirinfrared);
-
-        wxImage*  ComputeColoredNDWI(wxImage* infrared, wxImage* mirinfrared);
-
-        wxImage* ComputeIndex(wxImage* list[], char* str);
-
-        wxImage* ComputeColoredIndex(wxImage* list[], char* str);
-
-        void LoadPalette();
-        */
+        
+        wxString*       GetMessage();
 };
 
 
-
-//"Hello World, Where there is will, there is a way."
