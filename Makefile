@@ -24,5 +24,3 @@ $(OBJECTS): $(BUILDDIR)/%.o : $(SOURCEDIR)/%.cpp
 clean:
 	rm -f $(BUILDDIR)/* $(BINDIR)/$(EXECUTABLE)
 
-
-#g++ artprov.cpp `wx-config --cxxflags --libs std` -o program
