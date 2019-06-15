@@ -1,7 +1,7 @@
 # landsat-image-merger
 Graphical tool to merge Landsat bands.
 
-# Run
+# Build
 Install Docker
 
 Build Image 
