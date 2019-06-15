@@ -6,7 +6,6 @@
 	#include <wx/wxprec.h>
 #endif
 #include <wx/control.h>
-//#include "event.hpp"
 #include <vector>
 
 wxDECLARE_EVENT(COLOR_SELECTED, wxCommandEvent);
