@@ -12,7 +12,7 @@ OBJECTS = $(patsubst $(SOURCEDIR)/%.cpp,$(BUILDDIR)/%.o,$(SOURCES))
 all: dir $(BINDIR)/$(EXECUTABLE)
 
 dir:
-	mkdir -p $(BUILDDIR)
+	mkdir -p $(BUILDDIR) $(BINDIR)
 
 $(BINDIR)/$(EXECUTABLE): $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
