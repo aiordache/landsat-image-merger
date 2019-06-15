@@ -51,9 +51,7 @@ MainFrame::MainFrame(wxWindow *parent, const wxString &title, wxWindowID id, con
     // set the frame icon
     SetIcon(icon_xpm_data);
 
-    wxInitAllImageHandlers(); 
-
-
+    wxInitAllImageHandlers();
     CreateGUIControls(mf_size);
 
     Center();
@@ -284,8 +282,6 @@ void MainFrame::UpdateImage()
 
 void MainFrame::UpdateColorPalette()
 {
-    //SetTitle("Updating Palette");
-
     if (((wxRadioButton*)palettebar->FindControl(RADIO_CUSTOM_COL_PALETTE))->GetValue())
     {
         vector<unsigned int> colors = colorpalette->GetColorList();
@@ -295,10 +291,6 @@ void MainFrame::UpdateColorPalette()
     wxStaticBitmap* bitmap = (wxStaticBitmap*)palettebar->FindControl(GRADIENT_BITMAP);
 
     bitmap->SetBitmap(*(imghandler->GetColorPaletteImage()));
-
-    //SetTitle("Color Palette Updated. Apply to image...");
-    
-    //UpdateImage();
 }
 
 
@@ -399,7 +391,6 @@ void MainFrame::OnImageSaveAs(wxCommandEvent& event)
 
 void MainFrame::OnExit( wxCommandEvent& event )
 {
-    SetTitle("Exiting...");
     Close(TRUE);
 }
 

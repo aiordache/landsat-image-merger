@@ -80,7 +80,7 @@ ImageHandler::ImageHandler()
     for(int i = 0;i < N; i++)
         paths[i]   = "";
         
-    message = new wxString("No Landsat band loaded. Use menu buttons to load them.");
+    message = new wxString("No Landsat band loaded.");
     //the current processed image
     image = NULL;
     
