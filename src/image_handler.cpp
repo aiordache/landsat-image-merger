@@ -374,6 +374,12 @@ wxImage* ImageHandler::ComputeCustomIndex(string expr)
     {
         string s = exprvar[i].substr(0,  string::npos);
         bindex.push_back(stoi(s.erase(0, 1)) - 1);
+        if (bindex[i] < 0 || bindex[i] > N - 1)
+        {
+            if (message != NULL) delete message;
+            message = new wxString("Invalid expression.");
+            return NULL;
+        }
     }
     if (bindex.size() == 0)
     {

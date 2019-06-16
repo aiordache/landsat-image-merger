@@ -3,7 +3,7 @@
 #include <vector>
 #include <stack>
 
-#define N 12
+#define N 11
 
 typedef struct
 {

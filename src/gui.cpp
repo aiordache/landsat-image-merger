@@ -25,7 +25,6 @@ BEGIN_EVENT_TABLE(MainFrame, wxFrame)
  EVT_MENU(B9,   MainFrame::OnLoadImage)
  EVT_MENU(B10,   MainFrame::OnLoadImage)
  EVT_MENU(B11,   MainFrame::OnLoadImage)
- EVT_MENU(B12,   MainFrame::OnLoadImage)
  
  EVT_RADIOBUTTON(RADIO_RGB,     MainFrame::OnRadioStatusChange)
  EVT_RADIOBUTTON(RADIO_NDVI,    MainFrame::OnRadioStatusChange)
@@ -139,13 +138,13 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     menubar->AddTool(B8, wxT("Band 8 - Panchromatic"), wxBitmap(add_image_icon));
     menubar->SetToolShortHelp(B8, "Band 8 - panchromatic");
     
-     st = new wxStaticText(menubar, wxID_ANY, _("B9"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B9"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B9, wxT("Band 9"), wxBitmap(add_image_icon));
     menubar->SetToolShortHelp(B9, "Band 9");
     
-     st = new wxStaticText(menubar, wxID_ANY, _("B10"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
+    st = new wxStaticText(menubar, wxID_ANY, _("B10"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
     st->SetFont(font);
     menubar->AddControl(st);
     menubar->AddTool(B10, wxT("Band 10"), wxBitmap(add_image_icon));
@@ -156,15 +155,6 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     menubar->AddControl(st);
     menubar->AddTool(B11, wxT("Band 11"), wxBitmap(add_image_icon));
     menubar->SetToolShortHelp(B11, "Band 11");
-    
-    st = new wxStaticText(menubar, wxID_ANY, _("B12"), wxDefaultPosition, textsize, wxALIGN_CENTRE );
-    st->SetFont(font);
-    menubar->AddControl(st);
-    menubar->AddTool(B12, wxT("Band 12"), wxBitmap(add_image_icon));
-    menubar->SetToolShortHelp(B12, "Band 12");
-    
-    
-    
     
     menubar->AddStretchableSpace();
     menubar->AddSeparator();
@@ -183,8 +173,6 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     
     formula->Bind(wxEVT_CHAR, &MainFrame::OnFormulaKeyDown, this);
     
-    
-    
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_RGB, _T("RGB")));
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_NDVI, _T("NDVI")));
     operationsbar->AddControl(new wxRadioButton(operationsbar, RADIO_NDWI, _T("NDWI")));
@@ -193,8 +181,6 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     operationsbar->AddStretchableSpace();    
     operationsbar->Realize();
 
-    
-    
     palettebar    = new wxToolBar(this, wxID_ANY);
     
     palettebar->AddStretchableSpace();
@@ -205,8 +191,6 @@ void MainFrame::CreateGUIControls(const wxSize& mf_size)
     palettebar->AddControl(new wxRadioButton(palettebar, RADIO_CUSTOM_COL_PALETTE, _T("Custom Color Scheme")));
     palettebar->AddStretchableSpace();
     
-
-  
     colorpalette = new ColorPalette(palettebar, COLOR_PALETTE, "Color Palette");
     colorpalette->SetColorCount(3);
     colorpalette->Disable();
@@ -325,7 +309,7 @@ void MainFrame::OnLoadFromDir( wxCommandEvent& event )
         //sort filenames
         std::sort(filenames.begin(), filenames.end());
         for (int i = 0; i < filenames.size(); ++i)
-            if (i <= B12 - B1)
+            if (i <= B11 - B1)
             {
                 cout<<"Adding "<<filenames[i]<<" as Band "<<i + 1<<endl;
                 if (imghandler->AddImagePath(filenames[i]))
@@ -366,7 +350,7 @@ void MainFrame::OnDiscardAllImages( wxCommandEvent& event )
 {
     SetTitle("");
     //change icons in menubar
-    for(int id = B1; id <= B12; id++)
+    for(int id = B1; id <= B11; id++)
         menubar->SetToolNormalBitmap(id, wxBitmap(add_image_icon));
      
     imghandler->ResetImagePaths();

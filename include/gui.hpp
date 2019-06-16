@@ -19,7 +19,7 @@ enum
     MENU_SaveAs,
     MENU_Clear,
     IMAGE_DIR,
-    B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,B12,
+    B1,B2,B3,B4,B5,B6,B7,B8,B9,B10,B11,
     RADIO_RGB,
     RADIO_NDVI,
     RADIO_NDWI,
